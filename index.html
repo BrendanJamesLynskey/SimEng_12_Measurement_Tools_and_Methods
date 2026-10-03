@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulation Engineering Toolkit 12 — Measurement Tools and Methods</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,700&family=Geist+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #1c1815;
+            --bg-card: #231e1a;
+            --bg-code: #2b2520;
+            --text-primary: #efe8dc;
+            --text-secondary: #a2978b;
+            --accent: #aabd59;
+            --accent-dim: #aabd5944;
+            --accent-glow: #aabd5933;
+            --border: #3a322b;
+            --font-display: 'Bricolage Grotesque', sans-serif;
+            --font-mono: 'Geist Mono', 'Geist Mono', monospace;
+            --font-body: 'Instrument Sans', sans-serif;
+            --max-width: 900px;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 17px;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ── Header ── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .series-label {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .hero h1 .accent {
+            color: var(--accent);
+        }
+
+        .hero .subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+
+        /* ── Tag Pills ── */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .tag {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+            white-space: nowrap;
+        }
+
+        /* ── Pipeline Flow Bar ── */
+        .pipeline {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            margin-bottom: 1rem;
+            max-width: var(--max-width);
+        }
+
+        .pipeline-step {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            padding: 0.3rem 0.7rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .pipeline-arrow {
+            color: var(--accent);
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        /* ── Slides ── */
+        .slide {
+            min-height: 100vh;
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .slide-number {
+            font-family: var(--font-display);
+            font-size: 5rem;
+            font-weight: 700;
+            color: var(--accent-dim);
+            position: absolute;
+            top: 2rem;
+            right: 1.5rem;
+            line-height: 1;
+            user-select: none;
+        }
+
+        .slide h2 {
+            font-family: var(--font-display);
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            line-height: 1.25;
+        }
+
+        .slide h3 {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .slide p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .slide p strong {
+            color: var(--text-primary);
+        }
+
+        .slide ul, .slide ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .slide li {
+            margin-bottom: 0.4rem;
+        }
+
+        .slide li strong {
+            color: var(--text-primary);
+        }
+
+        /* ── Code Blocks ── */
+        .code-block {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin: 1.25rem 0;
+            overflow: hidden;
+        }
+
+        .code-header {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent);
+            background: rgba(170,189,89,0.08);
+            padding: 0.4rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-block pre {
+            margin: 0;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #dad1c5;
+        }
+
+        /* Syntax highlighting (manual) */
+        .kw { color: #de805a; }
+        .fn { color: #d7bbdf; }
+        .str { color: #bcdbd4; }
+        .cm { color: #a2978b; font-style: italic; }
+        .num { color: #97cdc6; }
+        .type { color: #e3b174; }
+        .dir { color: #de805a; }
+        .mac { color: #e3b174; }
+
+        /* ── Tables ── */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 1.25rem 0;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: var(--bg-code);
+            color: var(--accent);
+            font-weight: 600;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-family: var(--font-display);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) td {
+            background: rgba(35,30,26,0.5);
+        }
+
+        /* ── Diagrams ── */
+        .diagram-flow {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .diagram-box {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .diagram-box.accent {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(170,189,89,0.08);
+        }
+
+        .diagram-box.dim {
+            color: var(--text-secondary);
+            border-color: var(--border);
+        }
+
+        .diagram-arrow {
+            color: var(--accent);
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        /* Vertical flow diagrams */
+        .diagram-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .diagram-vertical .diagram-arrow {
+            font-size: 1.1rem;
+        }
+
+        /* Nested hierarchy diagram */
+        .hierarchy {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .hierarchy-level {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .hierarchy-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .hierarchy-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+
+        .hierarchy-item {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .hierarchy-item.accent {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(170,189,89,0.08);
+        }
+
+        /* Grid diagram */
+        .diagram-grid {
+            display: grid;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .diagram-grid.cols-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .diagram-grid.cols-3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .diagram-panel {
+            padding: 1rem;
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+
+        .diagram-panel.accent-border {
+            border-left: 3px solid var(--accent);
+        }
+
+        .diagram-panel h4 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .diagram-panel p, .diagram-panel ul {
+            font-size: 0.85rem;
+        }
+
+        /* ── Callout Boxes ── */
+        .callout {
+            background: var(--bg-card);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 8px 8px 0;
+            padding: 1rem 1.25rem;
+            margin: 1.25rem 0;
+        }
+
+        .callout p {
+            margin-bottom: 0;
+        }
+
+        .callout .callout-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.3rem;
+        }
+
+        /* ── Tier Visual ── */
+        .tier-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 1.5rem 0;
+            padding: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .tier-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .tier-label {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            min-width: 90px;
+            text-align: right;
+        }
+
+        .tier-fill {
+            height: 32px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 0.75rem;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            white-space: nowrap;
+            transition: width 0.6s ease;
+        }
+
+        .tier-cost {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            min-width: 70px;
+        }
+
+        /* ── Contents list ── */
+        .contents-list {
+            list-style: none;
+            padding-left: 0;
+            counter-reset: contents;
+        }
+
+        .contents-list li {
+            counter-increment: contents;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .contents-list li:last-child {
+            border-bottom: none;
+        }
+
+        .contents-list li::before {
+            content: counter(contents, decimal-leading-zero);
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+            min-width: 2rem;
+        }
+
+        .contents-list a {
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .contents-list a:hover {
+            color: var(--accent);
+        }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .slide {
+                padding: 3rem 1rem;
+                min-height: auto;
+            }
+
+            .slide-number {
+                font-size: 3rem;
+                top: 1.5rem;
+                right: 1rem;
+            }
+
+            .slide h2 {
+                font-size: 1.5rem;
+            }
+
+            .diagram-grid.cols-2,
+            .diagram-grid.cols-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .pipeline {
+                gap: 0.15rem;
+            }
+
+            .pipeline-step {
+                font-size: 0.6rem;
+                padding: 0.2rem 0.4rem;
+            }
+
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+
+            table {
+                font-size: 0.78rem;
+            }
+
+            .tier-label {
+                min-width: 60px;
+                font-size: 0.65rem;
+            }
+
+            .tier-fill {
+                font-size: 0.6rem;
+                height: 26px;
+            }
+        }
+
+        /* ── Interactive controls (added for Local LLM series) ── */
+        .control-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1.25rem 0;
+        }
+        .control-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .control-row label {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            min-width: 180px;
+        }
+        .control-row input[type="range"] {
+            flex: 1;
+            min-width: 160px;
+            accent-color: var(--accent);
+        }
+        .control-row input[type="number"],
+        .control-row select {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 4px;
+            padding: 0.3rem 0.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+        }
+        .control-row .val {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+            min-width: 80px;
+            text-align: right;
+        }
+        .btn {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            padding: 0.4rem 0.9rem;
+            background: var(--accent-dim);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .btn:hover { background: rgba(170,189,89,0.2); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn.secondary {
+            background: var(--bg-code);
+            color: var(--text-secondary);
+            border-color: var(--border);
+        }
+        .result-box {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            border-radius: 4px;
+            padding: 0.75rem 1rem;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            margin-top: 0.75rem;
+        }
+        .result-box .line-label { color: var(--text-secondary); }
+        .result-box .line-val   { color: var(--accent); font-weight: 600; }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+        .metric {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.6rem 0.8rem;
+            text-align: center;
+        }
+        .metric .metric-label {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .metric .metric-value {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            color: var(--accent);
+            font-weight: 600;
+            margin-top: 0.2rem;
+        }
+
+        /* Canvas / SVG containers */
+        .canvas-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1.25rem 0;
+            overflow-x: auto;
+        }
+        .canvas-wrap canvas,
+        .canvas-wrap svg {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+        }
+
+        /* Small inline badge */
+        .badge {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            padding: 0.1rem 0.45rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            vertical-align: middle;
+            margin-left: 0.3rem;
+        }
+        .badge.ok    { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+        .badge.warn  { border-color: #e3b174; color: #e3b174; background: rgba(227,177,116,0.08); }
+        .badge.bad   { border-color: #de805a; color: #de805a; background: rgba(222,128,90,0.08); }
+
+
+        /* ── LLM Inference Simulators additions ── */
+        .canvas-wrap canvas { image-rendering: auto; display: block; width: 100%; height: auto; }
+        .canvas-wrap svg { max-width: 100%; height: auto; }
+        .ladder { display: grid; gap: 0.4rem; margin: 1.25rem 0; }
+        .ladder-row {
+            display: grid; grid-template-columns: 11rem 1fr 7.5rem; gap: 0.75rem; align-items: center;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+            padding: 0.55rem 0.85rem; font-size: 0.88rem;
+        }
+        .ladder-row .rung { font-family: var(--font-display); font-weight: 600; color: var(--accent); }
+        .ladder-row .speed { font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-secondary); text-align: right; }
+        .res-list { list-style: none; padding: 0; margin: 0.75rem 0; }
+        .res-list li { padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 0.92rem; }
+        .res-list li:last-child { border-bottom: none; }
+        .res-list .what { color: var(--text-secondary); display: block; font-size: 0.86rem; margin-top: 0.15rem; }
+        .res-list a { color: var(--accent); text-decoration: none; }
+        .res-list a:hover { text-decoration: underline; }
+        .qa { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; margin: 0.6rem 0; padding: 0.2rem 1rem; }
+        .qa summary { cursor: pointer; padding: 0.6rem 0; font-weight: 600; }
+        .qa p, .qa ul { margin-bottom: 0.75rem; font-size: 0.92rem; }
+        .sim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.4rem 1.25rem; }
+        .chart-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+        .chart-title { font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.3rem; }
+        .slide a { color: var(--accent); }
+        @media (max-width: 640px) {
+            .ladder-row { grid-template-columns: 1fr; gap: 0.2rem; }
+            .ladder-row .speed { text-align: left; }
+        }
+        .concepts { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 6px; padding: 0.75rem 1rem; margin-top: 1.25rem; font-size: 0.88rem; }
+        .concepts p { margin: 0 0 0.4rem; color: var(--text-secondary); }
+        .concepts .chips { display: flex; flex-wrap: wrap; gap: 0.35rem 0.5rem; }
+        .concepts .chips a { border: 1px solid var(--border); border-radius: 999px; padding: 0.1rem 0.6rem; text-decoration: none; font-size: 0.82rem; }
+        .concepts .chips a:hover { border-color: var(--accent); }
+        /* ── Simulation Engineering Toolkit additions ── */
+        .code-header a.src-link { color: var(--text-secondary); text-decoration: none; float: right; }
+        .code-header a.src-link:hover { color: var(--accent); text-decoration: underline; }
+        p.src { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary); margin: -0.75rem 0 1rem; }
+        p.src a { color: var(--text-secondary); }
+        .control-panel select, .control-panel input[type=number] { background: var(--bg-code); color: var(--text-primary); border: 1px solid var(--border); border-radius: 4px; padding: 0.2rem 0.4rem; font-family: var(--font-mono); font-size: 0.8rem; }
+        .mut-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0.4rem 1rem; font-size: 0.85rem; }
+        .mut-grid label { display: flex; gap: 0.5rem; align-items: baseline; cursor: pointer; }
+        .mut-list { font-family: var(--font-mono); font-size: 0.78rem; line-height: 1.7; }
+        .mut-list .killed { color: var(--accent); }
+        .mut-list .survived { color: #de805a; }
+        .hero { overflow: hidden; }   /* the 600px glow must not widen the page on phones */
+        .chart-pair > *, .diagram-grid > *, .sim-grid > * { min-width: 0; }   /* let wide code scroll inside its column */
+        .slide p code, .slide li code, .slide td code { overflow-wrap: anywhere; }
+        .control-panel select { max-width: 100%; }
+        /* ── Deck 12: tool cards (five fields each; id="card-<key>" is the glossary's link target) ── */
+        .tool-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 0.9rem; margin: 1rem 0; }
+        .tool-card { background: var(--bg-card); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 6px; padding: 0.8rem 1rem; min-width: 0; scroll-margin-top: 1rem; }
+        .tool-card:target { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+        .tool-card h3 { font-family: var(--font-display); font-size: 1.02rem; color: var(--accent); margin: 0 0 0.45rem; }
+        .tool-card .kind { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-left: 0.4rem; }
+        .tool-card dl { margin: 0; font-size: 0.85rem; }
+        .tool-card dt { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.45rem; }
+        .tool-card dd { margin: 0.1rem 0 0; line-height: 1.5; }
+        .tool-card code, .tool-card a { overflow-wrap: anywhere; }
+        .tool-card .doc { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.5rem; }
+        .chooser-q { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.5rem 0; }
+        .chooser-q .btn { font-size: 0.8rem; }
+        .chooser-q .btn.on { background: var(--accent); color: var(--bg-primary); }
+        @media (max-width: 640px) { .tool-cards { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<header class="hero">
+    <div class="series-label">Simulation Engineering Toolkit &mdash; Presentation 12</div>
+    <h1>Measurement <span class="accent">Tools and Methods</span></h1>
+    <p class="subtitle">A catalogue of the tools and methods the simulation series measure with, grouped by what they measure, each with its principle, overhead, accuracy and pitfalls, when to use it, and where this GitHub uses it: profilers and flame graphs, benchmarks, simulated caches and hardware counters, GPU and CPU energy telemetry, trace viewers and framework profilers, RTL coverage and power flows, DRAM simulators, the CACTI, McPAT and Accelergy estimators (CACTI built and swept here), the statistics of simulation output, and agreement checks. Overheads measured on this series' own simulators.</p>
+
+    <div class="tags">
+        <span class="tag">Profilers</span>
+        <span class="tag">Hardware counters</span>
+        <span class="tag">Energy telemetry</span>
+        <span class="tag">Traces</span>
+        <span class="tag">RTL coverage</span>
+        <span class="tag">CACTI</span>
+        <span class="tag">Output statistics</span>
+    </div>
+
+    <div class="pipeline">
+        <span class="pipeline-step">Question</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Tool</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Overhead</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Accuracy</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Measure</span>
+        <span class="pipeline-arrow">&rarr;</span>
+        <span class="pipeline-step">Trust</span>
+    </div>
+</header>
+
+<section class="slide" id="slide-00">
+    <div class="slide-number">00</div>
+    <h2>Topics We'll Cover</h2>
+    <ul class="contents-list">
+        <li><a href="#slide-01">How to Read This Catalogue</a></li>
+        <li><a href="#slide-02">Interactive: Which Tool Should I Use?</a></li>
+        <li><a href="#slide-03">Time: Instrumenting Against Sampling Profilers</a></li>
+        <li><a href="#slide-04">Flame Graphs, On-CPU and Off-CPU</a></li>
+        <li><a href="#slide-05">Benchmarks and Load Generators</a></li>
+        <li><a href="#slide-06">Memory and Cache: Simulated Caches, Counters and Heaps</a></li>
+        <li><a href="#slide-07">GPU Telemetry: nvidia-smi, NVML, DCGM and Zeus</a></li>
+        <li><a href="#slide-08">CPU and Wall Energy: RAPL and Power Analysers</a></li>
+        <li><a href="#slide-09">Traces and Framework Profilers</a></li>
+        <li><a href="#slide-10">Hardware and RTL: Coverage, Activity and Power</a></li>
+        <li><a href="#slide-11">Memory Systems: DRAMsim3 and Ramulator</a></li>
+        <li><a href="#slide-12">Architecture Estimators: McPAT, CACTI, Accelergy and Timeloop</a></li>
+        <li><a href="#slide-13">CACTI on This Machine: SRAM Against Capacity</a></li>
+        <li><a href="#slide-14">Statistics of Simulation Output</a></li>
+        <li><a href="#slide-15">Agreement as a Measurement</a></li>
+        <li><a href="#slide-16">What to Take Away</a></li>
+    </ul>
+    <div class="concepts">
+        <p><strong>Concepts used here, and where they are explained.</strong> Each links to a glossary entry: this <a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#glossary">series glossary</a>, or the glossaries of LLM Inference Simulators and FHE Accelerator Simulators for concepts those series already explain.</p>
+        <div class="chips"><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-cprofile" title="Python&#x27;s deterministic profiler hooks every call and return: exact call counts and call trees, but the per-call cost inflates small, frequent functions. snakeviz draws the saved profile.">cProfile and snakeviz (instrumenting profilers)</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-sampling" title="A profiler that records the call stack at a fixed rate; time spent shows up as samples. py-spy samples a Python process from outside, with no changes to it.">Sampling profilers (py-spy)</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-perf" title="The Linux profiler: hardware event counts (perf stat), sampled call stacks (perf record) and annotated code. Unprivileged access is governed by the kernel.perf_event_paranoid setting.">Linux perf and perf_event_paranoid</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-gnutime" title="Prints what the kernel accounted for a finished command: wall and CPU time, maximum resident set size, page faults and context switches. Free, and the first look in the USE method.">GNU time (/usr/bin/time -v)</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-flamegraph" title="Sampled stacks merged by common prefix: a frame&#x27;s width is its share of samples, the top edge of each tower is where time is spent, and the x-axis is not time.">Flame graphs</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-criterion" title="A Rust benchmarking library: warm-up, many samples, confidence intervals and comparison with the previous run, so performance changes are measured rather than guessed.">criterion benchmarks</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-benchdist" title="Repeated timings form a distribution, often with several clusters: report the median, the median absolute deviation and a bootstrap confidence interval rather than a mean and standard deviation.">Benchmark distributions</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-loadgen" title="A load generator issues timestamped requests to a system under test (MLPerf&#x27;s LoadGen defines the standard scenarios). A closed-loop generator that waits for each response hides stalls from its own measurements: coordinated omission.">Load generators and coordinated omission</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-cachegrind" title="Valgrind&#x27;s tool that runs a program on a simulated CPU, counting every instruction and modelling the caches: slow, but deterministic, so small differences can be compared without timing noise.">Cachegrind and instruction counts</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-hwcounters" title="The CPU&#x27;s performance-monitoring unit counts events (cycles, instructions, cache and branch misses) at almost no cost; with more events than counters the kernel rotates them and scales the counts, which adds error.">Hardware performance counters and multiplexing</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-tracemalloc" title="Records the allocating traceback of every live Python memory block, so snapshots show which lines hold memory; expensive, and blind to memory that native extensions allocate.">tracemalloc (Python heap profiling)</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-nvml" title="NVIDIA&#x27;s driver library for GPU monitoring and its command-line front end: utilisation, clocks, memory, power and an energy counter. Power readings are averaged over sensor windows that can miss most of a run.">nvidia-smi and NVML</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-dcgm" title="The Data Center GPU Manager samples numbered fields (power, energy, and profiling metrics such as SM and tensor-pipe activity) on every GPU, continuously; some profiling metrics cannot be collected together and are multiplexed.">NVIDIA DCGM</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-zeus" title="A Python library measuring time and energy over named code windows from NVML&#x27;s energy counter (and RAPL for CPUs); the measurement behind the ML.ENERGY leaderboard.">Zeus (ML.ENERGY)</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-rapl" title="Energy counters per CPU domain (package, cores, DRAM) in model-specific registers, read through Linux powercap or perf&#x27;s power events. Package energy, not wall energy; root-only on current kernels.">RAPL (CPU energy counters)</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-powermeter" title="Meters at the wall or on a supply rail that measure voltage and current directly: the reference other power readings are calibrated against, including everything in the box.">External power analysers and board telemetry</a><a href="https://brendanjameslynskey.github.io/LLM_Hub_Inference_Simulators/#g-perfetto" title="A JSON timeline format (complete slices, counters, metadata) that Perfetto and chrome://tracing display. The simulator, ONNX Runtime&#x27;s profiler and RTL testbenches can all emit it, so timelines can be compared side by side.">Chrome trace events and Perfetto</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-torchprof" title="Records an event per PyTorch operator (and GPU kernel), with shapes and memory on request; aggregates by operator or exports a Chrome trace.">PyTorch profiler</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-ortprof" title="With profiling enabled, ONNX Runtime writes a Chrome-trace event per graph node per run, with operator type, execution provider and shapes, for the graph after its own optimisations.">ONNX Runtime profiler</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-nsight" title="A system-wide tracer of CPU threads, CUDA API calls, GPU kernels and copies on one timeline, for finding the idle gaps on a GPU.">NVIDIA Nsight Systems</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-coverage" title="The fraction of lines, branch outcomes or code regions that the tests execute. Low coverage is a warning; high coverage does not show that results are checked.">Line, branch and region coverage</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-verilator" title="Verilator compiles synthesisable SystemVerilog to fast two-state C++ and lints it; Icarus is a four-state event-driven simulator. Running tests on both catches simulator-dependent behaviour.">Verilator and Icarus Verilog</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-funccov" title="Bins describing the situations a testbench must exercise (a wrap-around, a boundary value), counted during the run; an empty bin is a hole in the verification, whatever the code coverage says.">Functional coverage</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-toggles" title="The number of bit changes per cycle on a design&#x27;s nets or registers; activity times capacitance times V squared times f gives dynamic power, so toggle counts are an early power proxy.">Switching activity (toggle counts)</a><a href="https://brendanjameslynskey.github.io/LLM_Hub_Inference_Simulators/#g-rtlpower" title="Switching activity from RTL simulation or emulation, run on real workload traces, gives per-block energies that calibrate the simulator; power maps feed thermal models that find thermal hot-spots.">RTL power and thermal analysis</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-mutation" title="Make small deliberate bugs (mutants) in the code and run the tests against each: a killed mutant was noticed, a surviving one was not. The mutation score measures how much the tests actually check.">Mutation testing</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-dramsim3" title="A cycle-accurate DRAM controller and device simulator (DDR, LPDDR, GDDR, HBM) configured with JEDEC timing; used here as the reference that Memory_System_Sim was cross-checked against.">DRAMsim3</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-ramulator" title="A cycle-level DRAM simulator that describes each standard as a generic state machine, so new standards and mechanisms are easy to add.">Ramulator</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-mcpat" title="An analytical power, area and timing model of multicore processors built from their structure, driven by a performance simulator&#x27;s activity counts; useful for relative comparisons, with documented sources of error.">McPAT</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-cacti" title="An analytical model of SRAM and DRAM arrays and caches: from capacity, organisation and technology it gives access time, energy per access, leakage and area. Built and swept over capacity at 22 nm in SimEng 12.">CACTI</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-accelergy" title="Timeloop searches the mappings of a tensor workload onto an accelerator and counts the actions at every level; Accelergy prices those actions in energy and area from per-component models.">Accelergy and Timeloop</a><a href="https://brendanjameslynskey.github.io/LLM_Hub_Inference_Simulators/#g-warmup" title="A stochastic run is one experiment: drop the warm-up period, repeat with different seeds, and report mean ± a t-based confidence interval. Tail percentiles need many samples.">Warm-up, replications and confidence intervals</a><a href="https://brendanjameslynskey.github.io/LLM_Hub_Inference_Simulators/#g-batchmeans" title="One long run cut into batches long enough to be nearly independent, each giving one sample of the metric: warm-up is paid once instead of once per replication, at the risk of correlated batches.">Batch means</a><a href="https://brendanjameslynskey.github.io/LLM_Hub_Inference_Simulators/#g-crn" title="Feeding two designs the same random request stream, so noise cancels in their difference: a much narrower confidence interval on &quot;which is better, and by how much&quot; for the same number of runs.">Common random numbers</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-golden" title="Store the output of a reference run and fail when today&#x27;s differs; re-bless (rewrite the stored output) deliberately, with the diff reviewed alongside the change that caused it.">Golden tests and re-blessing</a><a href="https://brendanjameslynskey.github.io/LLM_Hub_Inference_Simulators/#g-differential" title="Requiring two independent implementations to agree exactly on the same input: here the fast path against the baseline, and the browser JavaScript against the Python simulator.">Differential testing</a><a href="https://brendanjameslynskey.github.io/LLM_Hub_Inference_Simulators/#g-correlation" title="Fitting a model&#x27;s few free coefficients to measurements (or RTL), then tracking its error on workloads it was not fitted to. The correlation report is the deliverable that makes predictions trustworthy.">Calibration and correlation</a><a href="https://brendanjameslynskey.github.io/LLM_Hub_Inference_Simulators/#g-roofline" title="Attainable performance is the lower of peak compute and bandwidth × arithmetic intensity (FLOPs per byte). The ridge point is the intensity at which both limits meet; below it a kernel is memory-bound.">Roofline, arithmetic intensity and ridge point</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-bounds" title="Bounds on run time from counts alone (the roofline, the busiest resource&#x27;s busy time): optimistic by construction, so a simulated result below one is a bug.">Analytic lower bounds</a><a href="https://brendanjameslynskey.github.io/LLM_Hub_Inference_Simulators/#g-queueing" title="Closed-form results that a simulator&#x27;s engine must reproduce: M/M/1 mean time in system 1/(μ−λ); M/D/1 mean wait λS²/(2(1−ρ)) (Pollaczek–Khinchine). The KV link is tested this way.">Queueing theory checks (M/M/1, M/D/1)</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-flopcounter" title="A dispatch mode that adds up FLOPs from per-operator formulas as a model runs, even on the meta device; operators without a formula (fused CPU attention) are silently missed.">PyTorch's FLOP counter (FlopCounterMode)</a><a href="https://brendanjameslynskey.github.io/LLM_Hub_Inference_Simulators/#g-hotspot" title="Finding where speeding things up would help most. A stage breakdown that sums exactly to each request&#x27;s latency, the largest waiting stage mapped to the resource that owns it, confirmed by what-if sensitivity runs.">Hot-spot attribution</a><a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#g-usemethod" title="For every resource (CPUs, memory, disks, network, locks), check utilisation, saturation (work queued because the resource is busy) and errors: a checklist that finds system bottlenecks without guessing.">The USE method</a></div>
+    </div>
+</section>
+
+<section class="slide" id="slide-01">
+    <div class="slide-number">01</div>
+    <h2>How to Read This Catalogue</h2>
+    <p>The other decks in this series and its sisters <em>use</em> a lot of measurement tools: profilers, counters, coverage tools, trace viewers, DRAM simulators, power estimators. This deck is where each one is <em>explained</em>, so that a deck naming a tool can link here. Every tool and method is a card with the same five fields:</p>
+    <ul>
+        <li><strong>Principle:</strong> what it measures, and how.</li>
+        <li><strong>Overhead:</strong> what it costs the thing being measured, measured here where the tool runs.</li>
+        <li><strong>Accuracy and pitfalls:</strong> how far to trust the number, and the ways it misleads.</li>
+        <li><strong>When to use it</strong>, and when something else is better.</li>
+        <li><strong>Where this GitHub uses it:</strong> links to the slides and code that applied it.</li>
+    </ul>
+    <div class="canvas-wrap">
+        <svg viewBox="0 0 720 250" width="720" height="250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The catalogue is grouped by what is measured: time, memory and cache, power and energy, timelines, RTL verification progress, memory systems, unbuilt hardware, and the trustworthiness of simulation output. Each group lists its tools.">
+            <style>
+                .m1 { fill: #2b2520; stroke: #aabd59; stroke-width: 1.3; }
+                .m2 { fill: #2b2520; stroke: #e3b174; stroke-width: 1.3; }
+                .mt { fill: #efe8dc; font-family: 'Geist Mono', monospace; font-size: 11px; }
+                .md { fill: #a2978b; font-family: 'Geist Mono', monospace; font-size: 9.5px; }
+            </style>
+            <text x="10" y="16" class="md">measuring software that runs here</text>
+            <text x="370" y="16" class="md">measuring hardware, and hardware that does not exist yet</text>
+            <rect x="10" y="26" width="170" height="62" rx="6" class="m1"/><text x="20" y="44" class="mt">time (03-05)</text><text x="20" y="60" class="md">cProfile, py-spy, perf,</text><text x="20" y="74" class="md">criterion, LoadGen</text>
+            <rect x="190" y="26" width="170" height="62" rx="6" class="m1"/><text x="200" y="44" class="mt">memory, cache (06)</text><text x="200" y="60" class="md">cachegrind, counters,</text><text x="200" y="74" class="md">tracemalloc</text>
+            <rect x="10" y="98" width="170" height="62" rx="6" class="m1"/><text x="20" y="116" class="mt">timelines (09)</text><text x="20" y="132" class="md">Perfetto, PyTorch and</text><text x="20" y="146" class="md">ORT profilers (Nsight: docs)</text>
+            <rect x="190" y="98" width="170" height="62" rx="6" class="m1"/><text x="200" y="116" class="mt">trust in results</text><text x="200" y="132" class="md">replications, CRN (14);</text><text x="200" y="146" class="md">golden, bounds (15)</text>
+            <rect x="370" y="26" width="170" height="62" rx="6" class="m2"/><text x="380" y="44" class="mt">power, energy (07-08)</text><text x="380" y="60" class="md">NVML, DCGM, Zeus,</text><text x="380" y="74" class="md">RAPL, power analysers</text>
+            <rect x="550" y="26" width="160" height="62" rx="6" class="m2"/><text x="560" y="44" class="mt">RTL (10)</text><text x="560" y="60" class="md">coverage, toggles,</text><text x="560" y="74" class="md">SAIF/VCD power flows</text>
+            <rect x="370" y="98" width="170" height="62" rx="6" class="m2"/><text x="380" y="116" class="mt">memory systems (11)</text><text x="380" y="132" class="md">DRAMsim3, Ramulator</text>
+            <rect x="550" y="98" width="160" height="62" rx="6" class="m2"/><text x="560" y="116" class="mt">unbuilt chips (12-13)</text><text x="560" y="132" class="md">McPAT, CACTI,</text><text x="560" y="146" class="md">Accelergy, Timeloop</text>
+            <text x="10" y="190" class="md">green: run on this machine (an Intel i7-3770 desktop, no NVIDIA GPU) and measured;</text>
+            <text x="10" y="206" class="md">amber: some tools need hardware or privileges this machine lacks. Those cards are written</text>
+            <text x="10" y="222" class="md">from the tools' documentation and papers, and say so. No reading is invented.</text>
+        </svg>
+    </div>
+    <p>Every number from this machine comes from <code>snippets/t12/</code> (<code>run_t12.py</code>, <code>framework_profilers.py</code>, <code>rtl_coverage.py</code> and <code>cacti/run_cacti.py</code>), recorded in <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/blob/main/snippets/RESULTS.md">RESULTS.md</a>. Where <a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/">deck 11</a> already measured something, the card links to it instead of measuring again. Tool versions and vendor products change quickly; each card links to its documentation, which is the authority.</p>
+</section>
+
+<section class="slide" id="slide-02">
+    <div class="slide-number">02</div>
+    <h2>Interactive: Which Tool Should I Use?</h2>
+    <p>Answer two questions; the chooser names the tools to start with and links to their cards. It encodes the "when to use it" field of the cards, nothing more.</p>
+    <div class="control-panel">
+        <div class="chart-title">1. What do you want to know?</div>
+        <div class="chooser-q" id="ch-q1"></div>
+        <div class="chart-title" id="ch-l2">2. &nbsp;</div>
+        <div class="chooser-q" id="ch-q2"></div>
+        <div class="result-box" id="ch-r">Pick a question.</div>
+    </div>
+    <script>
+    (function () {
+        const C = (id, name) => `<a href="#card-${id}">${name}</a>`;
+        const TREE = [
+            ["Where does my program's time go?", "What is the program?", [
+                ["Python, and I can rerun it", [C("pyspy", "py-spy") + " first (sampling, barely slows it); " + C("cprofile", "cProfile") + " when you need exact call counts", C("flamegraph", "flame graphs") + " to read the result"]],
+                ["Python, already running (production)", [C("pyspy", "py-spy") + " attaches to a live process by PID, with no restart"]],
+                ["Compiled code (Rust, C++)", [C("perf", "perf record") + " where perf is allowed; " + C("cachegrind", "callgrind") + " where it is not", C("flamegraph", "flame graphs") + " to read the result"]],
+                ["It is mostly waiting, not computing", [C("flamegraph", "off-CPU flame graphs") + "; py-spy's <code>--idle</code>", "and the " + '<a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-02">USE method</a>' + " for the resource it waits on"]]]],
+            ["Did a change make it faster or slower?", "How big is the code under test?", [
+                ["A function or kernel", [C("criterion", "criterion") + " (Rust); a timing loop with warm-up, medians and a bootstrap interval otherwise"]],
+                ["A whole run", ["repeated whole-process timings with " + C("gnutime", "GNU time") + ", reported as distributions", "and " + C("cachegrind", "cachegrind") + " instruction counts when timing noise hides the change"]],
+                ["A serving system under load", [C("loadgen", "a load generator") + " with open-loop arrivals, reporting latency percentiles"]]]],
+            ["Why is it slow on the hardware?", "Which hardware?", [
+                ["CPU: IPC, cache and branch misses", [C("hwcounters", "hardware counters") + " via " + C("perf", "perf stat") + "; " + C("cachegrind", "cachegrind") + " for a deterministic cache simulation"]],
+                ["NVIDIA GPU", [C("nsight", "Nsight Systems") + " for the timeline; " + C("dcgm", "DCGM") + " profiling fields for utilisation"]],
+                ["Inside a PyTorch or ONNX model", [C("torchprof", "PyTorch profiler") + " or " + C("ortprof", "ONNX Runtime's profiler") + ", viewed in " + C("perfetto", "Perfetto")]]]],
+            ["How much memory does it use?", "Which memory?", [
+                ["Python objects: which lines allocate", [C("tracemalloc", "tracemalloc")]],
+                ["The whole process: peak resident set", [C("gnutime", "GNU time -v")]],
+                ["Cache behaviour", [C("cachegrind", "cachegrind") + " or " + C("hwcounters", "cache-miss counters")]]]],
+            ["How much power or energy does it draw?", "Which device?", [
+                ["NVIDIA GPU", [C("nvml", "NVML / nvidia-smi") + " for a quick look; " + C("dcgm", "DCGM") + " for fleets; " + C("zeus", "Zeus") + " for energy per code region"]],
+                ["Intel or AMD CPU", [C("rapl", "RAPL") + " (needs privileges)"]],
+                ["The whole box, as the wall sees it", [C("powermeter", "an external power analyser")]],
+                ["A chip that does not exist yet", [C("accelergy", "Accelergy") + " or " + C("mcpat", "McPAT") + " from structure; " + C("rtlpower", "an RTL power flow") + " once RTL exists"]]]],
+            ["Is my RTL verification done?", "What is the worry?", [
+                ["Code nobody exercised", [C("codecov", "code coverage") + " and " + C("rtlcov", "Verilator's line and toggle coverage")]],
+                ["Situations nobody created", [C("rtlcov", "functional coverage and crosses")]],
+                ["Tests that would not notice a bug", [C("mutation", "mutation testing")]]]],
+            ["What would a memory or SRAM cost?", "What kind?", [
+                ["A DRAM or HBM system's timing", [C("dramsim3", "DRAMsim3") + " or " + C("ramulator", "Ramulator")]],
+                ["An on-chip SRAM's area, energy and access time", [C("cacti", "CACTI")]],
+                ["A whole accelerator's energy and area", [C("accelergy", "Timeloop and Accelergy")]]]],
+            ["Can I trust my simulator's numbers?", "Trust in what sense?", [
+                ["The statistics: is the difference real?", [C("replications", "replications, confidence intervals and common random numbers")]],
+                ["The code: does it compute the model?", [C("agreement", "golden and differential tests") + "; " + C("bounds", "analytic bounds") + " as sanity checks"]],
+                ["The model: does it match reality?", [C("agreement", "correlation against measurement")]]]],
+        ];
+        const q1 = document.getElementById('ch-q1'), q2 = document.getElementById('ch-q2');
+        const l2 = document.getElementById('ch-l2'), r = document.getElementById('ch-r');
+        function btn(label, on) { const b = document.createElement('button'); b.className = 'btn'; b.type = 'button'; b.textContent = label; b.onclick = on; return b; }
+        function mark(row, b) { [...row.children].forEach(x => x.classList.toggle('on', x === b)); }
+        TREE.forEach(([q, sub, opts]) => {
+            const b = btn(q, () => {
+                mark(q1, b); q2.innerHTML = ''; l2.textContent = '2. ' + sub; r.textContent = 'Now the second question.';
+                opts.forEach(([o, rec]) => { const c = btn(o, () => { mark(q2, c); r.innerHTML = '<strong>Start with:</strong><ul>' + rec.map(x => '<li>' + x + '</li>').join('') + '</ul>'; }); q2.appendChild(c); });
+            });
+            q1.appendChild(b);
+        });
+    })();
+    </script>
+</section>
+
+<section class="slide" id="slide-03">
+    <div class="slide-number">03</div>
+    <h2>Time: Instrumenting Against Sampling Profilers</h2>
+    <p>There are two ways to find out where a program's time goes. An <strong>instrumenting</strong> profiler runs code at every function entry and exit and records exact counts and times. A <strong>sampling</strong> profiler looks at the call stack every few milliseconds and counts what it sees. The first is exact about calls and distorts time; the second is statistical about time and leaves the program almost untouched.</p>
+    <div class="canvas-wrap">
+        <svg viewBox="0 0 720 150" width="720" height="150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Instrumenting: a hook fires at every call and return, adding cost to each. Sampling: a timer interrupts at fixed intervals and records the stack; short functions may be missed.">
+            <style>
+                .p1 { fill: #aabd59; } .p2 { fill: #e3b174; } .p3 { fill: #97cdc6; }
+                .pt { fill: #efe8dc; font-family: 'Geist Mono', monospace; font-size: 11px; }
+                .pd { fill: #a2978b; font-family: 'Geist Mono', monospace; font-size: 9.5px; }
+                .pl { stroke: #de805a; stroke-width: 2; }
+                .ps { stroke: #97cdc6; stroke-width: 1.5; stroke-dasharray: 3 2; }
+            </style>
+            <text x="10" y="16" class="pt">instrumenting (cProfile)</text>
+            <rect x="10" y="26" width="300" height="16" class="p1"/><text x="14" y="38" class="pd" style="fill:#1f1a16">run()</text>
+            <rect x="30" y="44" width="60" height="14" class="p2"/><rect x="100" y="44" width="20" height="14" class="p2"/><rect x="130" y="44" width="20" height="14" class="p2"/><rect x="160" y="44" width="120" height="14" class="p3"/>
+            <line x1="30" y1="22" x2="30" y2="62" class="pl"/><line x1="90" y1="22" x2="90" y2="62" class="pl"/><line x1="100" y1="22" x2="100" y2="62" class="pl"/><line x1="120" y1="22" x2="120" y2="62" class="pl"/><line x1="130" y1="22" x2="130" y2="62" class="pl"/><line x1="150" y1="22" x2="150" y2="62" class="pl"/><line x1="160" y1="22" x2="160" y2="62" class="pl"/><line x1="280" y1="22" x2="280" y2="62" class="pl"/>
+            <text x="10" y="78" class="pd">a hook (red) at every call and return: exact counts,</text>
+            <text x="10" y="91" class="pd">but each hook costs time, most for many small calls</text>
+            <text x="380" y="16" class="pt">sampling (py-spy, perf)</text>
+            <rect x="380" y="26" width="300" height="16" class="p1"/><text x="384" y="38" class="pd" style="fill:#1f1a16">run()</text>
+            <rect x="400" y="44" width="60" height="14" class="p2"/><rect x="470" y="44" width="20" height="14" class="p2"/><rect x="500" y="44" width="20" height="14" class="p2"/><rect x="530" y="44" width="120" height="14" class="p3"/>
+            <line x1="415" y1="22" x2="415" y2="62" class="ps"/><line x1="455" y1="22" x2="455" y2="62" class="ps"/><line x1="495" y1="22" x2="495" y2="62" class="ps"/><line x1="535" y1="22" x2="535" y2="62" class="ps"/><line x1="575" y1="22" x2="575" y2="62" class="ps"/><line x1="615" y1="22" x2="615" y2="62" class="ps"/><line x1="655" y1="22" x2="655" y2="62" class="ps"/>
+            <text x="380" y="78" class="pd">a stack sample (blue) at a fixed rate: cheap, but</text>
+            <text x="380" y="91" class="pd">time is estimated from counts, and short</text><text x="380" y="104" class="pd">calls can fall between samples</text>
+            <text x="10" y="128" class="pd">The same simulation under each tool, wall clock (slowdown against no tool):</text>
+            <text x="10" y="143" class="pd">the table below. Coverage and tracemalloc are there for comparison: they hook every line and every allocation.</text>
+        </svg>
+    </div>
+    <div class="table-wrap"><table>
+<thead><tr><th>Tool</th><th>Runs</th><th>Median</th><th>Slowdown</th><th>Runs (s)</th></tr></thead>
+<tbody>
+<tr><td>no tool</td><td>5</td><td>1.23 s</td><td>1.00x</td><td>1.23, 1.26, 1.19, 1.21, 1.23</td></tr>
+<tr><td>cProfile (instrumenting every call)</td><td>3</td><td>2.51 s</td><td>2.04x</td><td>2.52, 2.51, 2.49</td></tr>
+<tr><td>py-spy record, 100 Hz</td><td>3</td><td>1.29 s</td><td>1.05x</td><td>1.30, 1.29, 1.26</td></tr>
+<tr><td>py-spy record, 500 Hz</td><td>3</td><td>1.78 s</td><td>1.45x</td><td>1.84, 1.78, 1.57</td></tr>
+<tr><td>coverage run (line coverage)</td><td>3</td><td>3.18 s</td><td>2.59x</td><td>3.28, 3.18, 3.06</td></tr>
+<tr><td>coverage run --branch</td><td>3</td><td>3.49 s</td><td>2.85x</td><td>3.53, 3.48, 3.49</td></tr>
+<tr><td>python -X tracemalloc=1 (one frame per allocation)</td><td>3</td><td>5.79 s</td><td>4.72x</td><td>5.84, 5.79, 5.78</td></tr>
+<tr><td>python -X tracemalloc=25 (25 frames)</td><td>3</td><td>31.45 s</td><td>25.63x</td><td>31.60, 31.42, 31.45</td></tr>
+</tbody></table></div>
+    <p class="src">Source: <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/blob/main/snippets/RESULTS.md">snippets/RESULTS.md</a> in _simeng_build</p>
+    <div class="tool-cards">
+        <div class="tool-card" id="card-cprofile"><h3>cProfile and snakeviz<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>Python's built-in deterministic profiler hooks every function call and return (<code>sys.setprofile</code>-style events) and records call counts, own time (<code>tottime</code>) and time including callees (<code>cumtime</code>) per function. <a href="https://jiffyclub.github.io/snakeviz/">snakeviz</a> draws the saved profile as an interactive icicle or sunburst of the call tree.</dd>
+            <dt>Overhead</dt><dd>2.04x on Disaggregated_Inference_Sim, which makes millions of small calls. The cost is per call, so code made of many tiny functions slows most.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Counts are exact; times are inflated, unevenly: the hook's cost lands on whichever function is small and frequent, so they look worse than they are. Time inside C functions is attributed to the built-in, with no detail below it. Profile a realistic workload, not the first second of one.</dd>
+            <dt>When to use it</dt><dd>When you need exact call counts or a call tree (who calls this a million times?), on a run short enough to repeat. For "where does the time go" on a long or live run, a sampling profiler distorts less.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/InfSim_08_Accelerating_Simulators/#slide-02">InfSim 08, step zero: profile</a> found the per-step bookkeeping with it; its current report is in <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/blob/main/snippets/RESULTS.md">RESULTS.md</a> (T12).</dd></dl>
+            <div class="doc">Docs: <a href="https://docs.python.org/3/library/profile.html">The Python Profilers</a></div></div>
+        <div class="tool-card" id="card-pyspy"><h3>py-spy (sampling profilers)<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>Another process reads the target Python process's memory at a fixed rate and reconstructs its Python call stack; each sample adds one count to every frame on the stack. Time is estimated as share of samples. Works on a running process (<code>py-spy record --pid</code>) with no code changes.</dd>
+            <dt>Overhead</dt><dd>Measured on the same run: 1.05x at 100 Hz and 1.45x at 500 Hz. By default py-spy pauses the process for each sample so the stack is consistent; <code>--nonblocking</code> avoids the pause at the risk of torn stacks.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Statistical: a function with few samples has a wide error bar (the relative error of a share falls roughly as one over the square root of its sample count). By default it only counts threads that are running; <code>--idle</code> includes waiting ones. Native extensions need <code>--native</code>. At 500 Hz here, py-spy now and then lost a race with the child's exit and had to be rerun (RESULTS.md).</dd>
+            <dt>When to use it</dt><dd>The default first look at any Python program, and the only safe one in production. Use cProfile when you need counts; perf when the time is in native code.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-05">SimEng 11: sampling profilers</a> and <a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-07">reading a profile</a>, on Disaggregated_Inference_Sim and Memory_System_Sim.</dd></dl>
+            <div class="doc">Docs: <a href="https://github.com/benfred/py-spy">py-spy on GitHub</a></div></div>
+        <div class="tool-card" id="card-perf"><h3>Linux perf<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>The kernel's interface to the CPU's performance-monitoring unit. <code>perf stat</code> <em>counts</em> events (cycles, instructions, misses) over a run; <code>perf record</code> <em>samples</em>: every N events or at a frequency it records the instruction pointer and, with <code>--call-graph</code>, the stack. Works for any language whose frames it can unwind.</dd>
+            <dt>Overhead</dt><dd>Counting mode costs next to nothing (the hardware counts). Sampling costs an interrupt per sample, so it scales with the rate (<code>-F</code>); DWARF unwinding copies a chunk of stack per sample and costs far more than frame-pointer unwinding.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Needs permission (<code>kernel.perf_event_paranoid</code>); stacks need frame pointers or DWARF info, which release builds and interpreters often lack; more events than counters means multiplexing and scaled estimates (<a href="#card-hwcounters">counters card</a>). An interpreter shows up as its own C functions unless it cooperates (Python 3.12's <code>-X perf</code>).</dd>
+            <dt>When to use it</dt><dd>Compiled code, interpreter internals, and "why" questions (IPC, misses) that a Python profiler cannot answer. Where perf is not allowed, as in many containers and CI runners, use py-spy or callgrind.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-04">SimEng 11: Linux perf, counters and call stacks</a> (the Rust port and the Python simulator); slide 06 here (multiplexing).</dd></dl>
+            <div class="doc">Docs: <a href="https://perfwiki.github.io/main/">perf wiki</a> &middot; <a href="https://www.kernel.org/doc/html/latest/admin-guide/perf-security.html">perf security</a></div></div>
+        <div class="tool-card" id="card-gnutime"><h3>GNU time (<code>/usr/bin/time -v</code>)<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>Runs a command and prints what the kernel accounted for it when it exited (via <code>wait4</code>): wall time, user and system CPU time, maximum resident set size, page faults, and voluntary and involuntary context switches. Not the shell's <code>time</code> keyword, which prints only times.</dd>
+            <dt>Overhead</dt><dd>None during the run: the kernel keeps these counts anyway.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>One number per run, so it says nothing about where. Maximum RSS is a peak and counts shared libraries; CPU time above wall time means parallelism; many involuntary switches mean more runnable threads than CPUs.</dd>
+            <dt>When to use it</dt><dd>The first look in the <a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-02">USE method</a>: is it CPU-bound, waiting, swapping, or oversubscribed? And the cheapest way to record peak memory in CI.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-03">SimEng 11: USE in practice</a> (a rayon sweep on one and eight threads); the RSS figure on slide 06 here.</dd></dl>
+            <div class="doc">Docs: <a href="https://man7.org/linux/man-pages/man1/time.1.html">time(1)</a></div></div>
+    </div>
+</section>
+
+<section class="slide" id="slide-04">
+    <div class="slide-number">04</div>
+    <h2>Flame Graphs, On-CPU and Off-CPU</h2>
+    <p>A profile of thousands of stacks needs a picture. <a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-06">SimEng 11 slide 06</a> has interactive flame graphs of four real profiles from this series; this card is the method behind them.</p>
+    <div class="tool-cards">
+        <div class="tool-card" id="card-flamegraph"><h3>Flame graphs<span class="kind">method</span></h3><dl>
+            <dt>Principle</dt><dd>Sampled stacks are merged by common prefix and drawn as towers: the root at the bottom, callees above. A frame's <strong>width</strong> is the share of samples with it on the stack (total time); the exposed top edge is self time. Siblings are sorted alphabetically, so the x-axis is not time. An <strong>on-CPU</strong> flame graph samples running threads; an <strong>off-CPU</strong> one weighs stacks by the time threads spent blocked (sleeping, waiting for I/O or a lock), recorded from scheduler events.</dd>
+            <dt>Overhead</dt><dd>The picture is free; the cost is the profiler's that collected the stacks (slide 03). Off-CPU tracing records every context switch, which on a busy system costs much more than sampling.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Inherits the sampling error of thin frames. Missing frames (no frame pointers, inlining) make towers look shallower and move time to the wrong parent. An on-CPU graph of a program that mostly waits looks small and misleading: waiting is invisible to it. Comparing two graphs by eye is weak; a differential flame graph colours the change.</dd>
+            <dt>When to use it</dt><dd>Whenever a profile has more than a screenful of functions. Off-CPU when wall time is much larger than CPU time (GNU time shows that), which for simulators usually means I/O or a lock rather than compute.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-05">SimEng 11: sampling profilers and flame graphs</a>; the folded stacks are in <code>snippets/t11/out</code> of the hub repository.</dd></dl>
+            <div class="doc">Docs: <a href="https://www.brendangregg.com/flamegraphs.html">Flame graphs</a> &middot; <a href="https://www.brendangregg.com/FlameGraphs/offcpuflamegraphs.html">Off-CPU flame graphs</a> (Brendan Gregg)</div></div>
+    </div>
+    <ul>
+        <li><strong>Reading one, in order:</strong> find the widest towers (where the time is), then the widest plateaus at their tops (the code that runs), then ask whether that code should be running that often. <a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-07">SimEng 11 slide 07</a> works through self against total time on a real profile.</li>
+        <li><strong>On a simulator,</strong> on-CPU is nearly always the right view: a discrete-event simulator does not wait for anything. The exception is a co-simulation waiting on an RTL simulator or a socket, where off-CPU time is the bottleneck.</li>
+    </ul>
+</section>
+
+<section class="slide" id="slide-05">
+    <div class="slide-number">05</div>
+    <h2>Benchmarks and Load Generators</h2>
+    <p>A profiler says where time goes; a benchmark says how long something takes, and whether a change moved it. <a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-10">SimEng 11 slide 10</a> measured why a benchmark result is a distribution, not a number (median, MAD and a bootstrap interval), and <a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-11">slide 11</a> designed a regression gate from that noise. Two tools that apply those statistics:</p>
+    <div class="tool-cards">
+        <div class="tool-card" id="card-criterion"><h3>criterion (Rust microbenchmarks)<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>Runs a closure many times: a warm-up phase, then samples of increasing iteration counts, fits time against iterations by linear regression (so fixed per-sample overhead drops out), and reports the slope with a bootstrap confidence interval. It saves each run and reports whether the next one changed, with a significance test and a noise threshold.</dd>
+            <dt>Overhead</dt><dd>Wall-clock seconds per benchmark (by default 3 s of warm-up and 5 s of measurement); the code under test runs at full speed. <code>black_box</code> stops the compiler optimising the work away.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>A microbenchmark measures a hot loop with warm caches and a trained branch predictor, which the real program may never see. "Change detected" at 5% on a noisy desktop can be noise; criterion's own noise threshold (2% by default) and SimEng 11's A/A test say how much. It compares runs on one machine only.</dd>
+            <dt>When to use it</dt><dd>For a kernel, a data structure or an event-queue operation whose cost you want to track. For whole-program speed, time the whole process repeatedly instead; for Python, <code>pytest-benchmark</code> plays the same role (not used in this series).</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/SimEng_01_Rust_for_Simulation_Engineers/#slide-11">SimEng 01: the toolchain</a> (events per second of Rust_DES_Kernel); <a href="https://brendanjameslynskey.github.io/SimEng_06_Testing_Frameworks/#slide-13">SimEng 06: a performance gate in CI</a>.</dd></dl>
+            <div class="doc">Docs: <a href="https://bheisler.github.io/criterion.rs/book/">criterion.rs user guide</a></div></div>
+        <div class="tool-card" id="card-loadgen"><h3>Load generators (MLPerf LoadGen)<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>A load generator issues requests to a system under test and timestamps each one's issue and completion. <a href="https://github.com/mlcommons/inference/tree/master/loadgen">MLPerf Inference's LoadGen</a> defines scenarios: single-stream, multi-stream, offline, and server (Poisson arrivals with a latency bound), and checks that enough queries ran for the reported percentile to be meaningful.</dd>
+            <dt>Overhead</dt><dd>It shares the machine with the system under test; LoadGen is C++ to keep its own cost small, and must never be the bottleneck.</dd>
+            <dt>Accuracy and pitfalls</dt><dd><strong>Coordinated omission:</strong> a closed-loop generator that waits for each response before sending the next stops sending when the system stalls, so the stall hides itself and the tail latency looks far better than users see. Measure from the intended send time, with open-loop (scheduled) arrivals.</dd>
+            <dt>When to use it</dt><dd>Benchmarking a serving system, and validating a serving simulator against one: a simulator that can emulate LoadGen's server scenario can be compared with published MLPerf results.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/InfSim_04_Simulator_Landscape/#slide-07">InfSim 04: workloads and benchmarks</a>; <a href="https://brendanjameslynskey.github.io/InfSim_06_Metrics_Hotspots_Validation/#slide-02">InfSim 06: open-loop arrivals</a>. The simulators generate open-loop Poisson arrivals themselves.</dd></dl>
+            <div class="doc">Paper: <a href="https://arxiv.org/abs/1911.02549">Reddi et al., MLPerf Inference Benchmark (arXiv:1911.02549)</a> &middot; <a href="https://github.com/giltene/wrk2">wrk2 README on coordinated omission</a></div></div>
+    </div>
+</section>
+
+<section class="slide" id="slide-06">
+    <div class="slide-number">06</div>
+    <h2>Memory and Cache: Simulated Caches, Counters and Heaps</h2>
+    <div class="tool-cards">
+        <div class="tool-card" id="card-cachegrind"><h3>Valgrind: cachegrind and callgrind<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>Valgrind translates the program's machine code on the fly and runs it on a synthetic CPU. Cachegrind counts every instruction executed (and, with <code>--cache-sim=yes</code>, simulates a first-level and last-level cache); callgrind adds the call graph, so costs can be attributed to callers. Both annotate source lines.</dd>
+            <dt>Overhead</dt><dd>Measured: 93x on a short Rust run (Valgrind's start-up dominates) and 67x on the Python simulator (table below). The manual quotes 20&ndash;100&times;.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Instruction counts are exact and deterministic: the same run gives the same count, so a 1% change is visible where timing noise is several per cent (<a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-10">SimEng 11 slide 10</a>). The cache model is simple (no prefetcher, no out-of-order overlap), so miss counts are indicative, and instructions are not time: a cache miss costs hundreds of cycles, an add one.</dd>
+            <dt>When to use it</dt><dd>Comparing two versions of code, in CI without timing noise, or where perf is not allowed. For real cache behaviour on real hardware, use counters.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-08">SimEng 11: counting instructions with cachegrind</a> (Rust against Python; the sort that took half the instructions).</dd></dl>
+            <div class="doc">Docs: <a href="https://valgrind.org/docs/manual/cg-manual.html">Cachegrind manual</a> &middot; <a href="https://valgrind.org/docs/manual/cl-manual.html">Callgrind manual</a></div></div>
+        <div class="tool-card" id="card-hwcounters"><h3>Hardware performance counters<span class="kind">method</span></h3><dl>
+            <dt>Principle</dt><dd>The CPU's performance-monitoring unit has a handful of programmable counters per core (Intel's recent cores have four to eight, plus a few fixed ones) that increment on events: cycles, instructions retired, cache references and misses, branch mispredictions, TLB misses. Instructions per cycle (IPC) and misses per thousand instructions come from their ratios.</dd>
+            <dt>Overhead</dt><dd>Essentially none in counting mode: the hardware counts while the program runs at full speed.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Ask for more events than counters and the kernel <strong>multiplexes</strong>: it rotates events onto the counters and scales each count by the time it was enabled. Here twelve events were each counted for 18&ndash;45% of the run (table below), and the scaled estimate moved: instructions: counted alone 2,620,114,505; multiplexed with eleven others 2,656,701,145 (+1.4%). Event definitions vary by CPU generation, some events do not exist (<code>LLC-load-misses</code> here), and raw counts mislead: normalise per instruction.</dd>
+            <dt>When to use it</dt><dd>When a profile says <em>where</em> but not <em>why</em>: low IPC with many misses points at memory, many mispredictions at control flow. Count a few events per run, and repeat (<code>perf stat -r</code>), rather than many at once.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-04">SimEng 11: perf stat on the Rust and Python simulators</a>; the multiplexing table below.</dd></dl>
+            <div class="doc">Docs: <a href="https://perfwiki.github.io/main/tutorial/">perf tutorial</a> (events, multiplexing and scaling)</div></div>
+        <div class="tool-card" id="card-tracemalloc"><h3>tracemalloc (Python heap)<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>Hooks Python's memory allocators and records, for every live block, the traceback where it was allocated (one frame by default). Snapshots can be grouped by line and diffed between two points in a run. Valgrind's <code>massif</code> does the same for native heaps.</dd>
+            <dt>Overhead</dt><dd>Large and growing with the frames kept: 4.72x with one frame and 25.63x with 25, on the simulation of slide 03. Its own bookkeeping also uses memory.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Exact for Python allocations, blind to memory that C extensions allocate themselves, and not the process's footprint: Peak traced Python heap 49.0 MiB; still allocated at the end 35.2 MiB; the process's maximum resident set (<code>/usr/bin/time -v</code>, no tracing) 76.9 MiB.</dd>
+            <dt>When to use it</dt><dd>Finding which lines hold memory, or a leak (diff two snapshots). For the footprint, GNU time's maximum RSS; for NumPy and PyTorch buffers, their own tools.</dd>
+            <dt>Where this GitHub uses it</dt><dd>Here only: Disaggregated_Inference_Sim's largest holder is <code>sim.py:132</code>, the per-request inter-token latency lists that the metrics need at the end (table below).</dd></dl>
+            <div class="doc">Docs: <a href="https://docs.python.org/3/library/tracemalloc.html">tracemalloc</a> &middot; <a href="https://valgrind.org/docs/manual/ms-manual.html">Massif</a></div></div>
+    </div>
+    <div class="chart-title">Cachegrind's slowdown</div>
+    <div class="table-wrap"><table>
+<thead><tr><th>Program</th><th>Native (median of 5)</th><th>Under cachegrind</th><th>Slowdown</th></tr></thead>
+<tbody>
+<tr><td>Rust disagg-rs, 500 requests</td><td>9.6 ms</td><td>0.89 s</td><td>93x</td></tr>
+<tr><td>Python disagg-sim, 500 requests</td><td>276.6 ms</td><td>18.58 s</td><td>67x</td></tr>
+</tbody></table></div>
+    <p class="src">Source: <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/blob/main/snippets/RESULTS.md">snippets/RESULTS.md</a> in _simeng_build</p>
+    <div class="chart-title">tracemalloc: largest holders at the end of the run</div>
+    <div class="table-wrap"><table>
+<thead><tr><th>Line (at the end of the run)</th><th>Size</th><th>Blocks</th></tr></thead>
+<tbody>
+<tr><td><code>src/disagg_sim/sim.py:132</code></td><td>23.7 MiB</td><td>766,474</td></tr>
+<tr><td><code>src/disagg_sim/sim.py:476</code></td><td>4.7 MiB</td><td>46,254</td></tr>
+<tr><td><code>src/disagg_sim/sim.py:477</code></td><td>2.2 MiB</td><td>61,672</td></tr>
+<tr><td><code>src/disagg_sim/sim.py:475</code></td><td>1.6 MiB</td><td>30,836</td></tr>
+</tbody></table></div>
+    <p class="src">Source: <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/blob/main/snippets/RESULTS.md">snippets/RESULTS.md</a> in _simeng_build</p>
+    <div class="chart-title">perf stat with twelve events (multiplexed)</div>
+    <div class="table-wrap"><table>
+<thead><tr><th>Event</th><th>Count (scaled)</th><th>Run-to-run variation</th><th>Counted for</th></tr></thead>
+<tbody>
+<tr><td>cycles</td><td>1,266,070,349</td><td>0.53%</td><td>27%</td></tr>
+<tr><td>instructions</td><td>2,656,701,145</td><td>0.63%</td><td>36%</td></tr>
+<tr><td>cache-references</td><td>6,164,310</td><td>2.00%</td><td>36%</td></tr>
+<tr><td>cache-misses</td><td>2,985,476</td><td>2.11%</td><td>45%</td></tr>
+<tr><td>branches</td><td>275,974,295</td><td>0.57%</td><td>45%</td></tr>
+<tr><td>branch-misses</td><td>3,015,337</td><td>2.65%</td><td>45%</td></tr>
+<tr><td>L1-dcache-loads</td><td>497,366,386</td><td>0.72%</td><td>35%</td></tr>
+<tr><td>L1-dcache-load-misses</td><td>19,862,811</td><td>1.65%</td><td>35%</td></tr>
+<tr><td>LLC-loads</td><td>4,526,950</td><td>8.05%</td><td>18%</td></tr>
+<tr><td>LLC-load-misses</td><td>not supported on this CPU</td><td>-</td><td>-</td></tr>
+<tr><td>dTLB-loads</td><td>498,474,523</td><td>0.59%</td><td>18%</td></tr>
+<tr><td>dTLB-load-misses</td><td>1,301,486</td><td>4.17%</td><td>18%</td></tr>
+</tbody></table></div>
+    <p class="src">Source: <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/blob/main/snippets/RESULTS.md">snippets/RESULTS.md</a> in _simeng_build</p>
+</section>
+
+<section class="slide" id="slide-07">
+    <div class="slide-number">07</div>
+    <h2>GPU Telemetry: nvidia-smi, NVML, DCGM and Zeus</h2>
+    <p>This machine has no NVIDIA GPU (<code>nvidia-smi</code> and <code>dcgmi</code> are not installed; RESULTS.md records the check), so nothing on this slide was measured here. The cards are written from NVIDIA's and the tools' documentation and from a published measurement study; the outputs shown are <strong>documentation excerpts</strong>, labelled as such. Drivers and field lists change between releases: the linked documentation is the authority.</p>
+    <div class="tool-cards">
+        <div class="tool-card" id="card-nvml"><h3>nvidia-smi and NVML<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>NVML is the C library the driver exposes for monitoring and management: utilisation, clocks, temperatures, memory, power draw, a cumulative energy counter (Volta and later), throttle reasons. <code>nvidia-smi</code> is the command-line front end; <code>nvidia-smi --query-gpu=... --format=csv -lms 100</code> polls fields to CSV.</dd>
+            <dt>Overhead</dt><dd>A query is a driver call, cheap enough to poll at 10 Hz; the GPU's sensors update on their own schedule regardless of how often you ask.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>"Utilisation" means at least one kernel was running during the sample period, not how busy the GPU's units were. Power is not instantaneous: <a href="https://arxiv.org/abs/2312.02741">Yang, Adamek and Armour</a> found that on A100 and H100 the reading averages 25 ms out of every 100 ms, so 75% of the run is never sampled; newer drivers separate <code>power.draw.instant</code> from <code>power.draw.average</code>. Their recommended practice (many repetitions, randomised delays, discard the rise time) brought it to about 5% of an external meter.</dd>
+            <dt>When to use it</dt><dd>A quick look, scripts, and the energy counter around a long run. For many GPUs or profiling-level metrics, DCGM; for per-region energy in Python, Zeus.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/InfSim_07_Power_and_Energy/#slide-03">InfSim 07: calibrating the power model</a> (read power while sweeping FLOP and byte rates, fit pJ/FLOP and pJ/byte).</dd></dl>
+            <div class="doc">Docs: <a href="https://docs.nvidia.com/deploy/nvml-api/index.html">NVML API</a> &middot; <a href="https://docs.nvidia.com/deploy/nvidia-smi/index.html">nvidia-smi</a></div></div>
+        <div class="tool-card" id="card-dcgm"><h3>NVIDIA DCGM<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>The Data Center GPU Manager runs a host engine that samples numbered <em>fields</em> for every GPU: device fields such as <code>DCGM_FI_DEV_POWER_USAGE</code> (W) and <code>DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION</code> (mJ since the driver loaded), and profiling fields read from the GPU's counters, such as SM active (1002), SM occupancy (1003), tensor pipe active (1004) and DRAM active (1005). <code>dcgmi dmon</code> streams them; <code>dcgm-exporter</code> feeds Prometheus.</dd>
+            <dt>Overhead</dt><dd>Designed to run continuously on production nodes. Profiling fields default to 1 Hz, with 100 ms as the minimum interval.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Profiling fields are fractions of time or cycles averaged over the interval, so a short burst is diluted. Not every profiling metric can be collected at once: some need several passes and are multiplexed, and which combinations work depends on the GPU (<code>dcgmi profile -l</code> lists them). Power fields inherit the sensor averaging of the NVML card.</dd>
+            <dt>When to use it</dt><dd>Fleet monitoring and long calibration runs: power against utilisation over hours, across many GPUs. For one program's timeline, Nsight Systems.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/InfSim_07_Power_and_Energy/#slide-09">InfSim 07: the power fidelity ladder</a> (silicon measurement) and <a href="https://brendanjameslynskey.github.io/InfSim_11_Role_Primer/#slide-09">InfSim 11</a> (calibrate coefficients by regression on measured power).</dd></dl>
+            <div class="code-block"><div class="code-header">Documentation excerpt, not a measurement: dcgmi dmon output format (NVIDIA DCGM user guide)</div><pre><code>$ dcgmi dmon -e 1001,1004,1005
+# Entity  GRACT  TENSO  DRAMA
+    GPU 0  0.969  0.928  0.000</code></pre></div>
+            <div class="doc">Docs: <a href="https://docs.nvidia.com/datacenter/dcgm/latest/user-guide/feature-overview.html">DCGM feature overview</a> &middot; <a href="https://github.com/NVIDIA/dcgm-exporter">dcgm-exporter</a></div></div>
+        <div class="tool-card" id="card-zeus"><h3>Zeus (ML.ENERGY)<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>A Python library that measures time and energy over named code windows: <code>monitor.begin_window("step")</code> &hellip; <code>end_window("step")</code>. On Volta and newer NVIDIA GPUs it reads NVML's energy counter at the window edges; on older ones it polls power in a separate process. It also reads CPU and DRAM energy through RAPL, which needs root. It underlies the <a href="https://ml.energy/leaderboard">ML.ENERGY leaderboard</a>'s energy per request.</dd>
+            <dt>Overhead</dt><dd>Its documentation gives under 10 ms per call, so windows should be long compared with that: a training step or a batch, not a kernel.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>As good as the counters underneath: NVML's energy counter and RAPL, with their update periods and averaging. Energy of a window shared with other work on the same GPU is the GPU's, not your code's.</dd>
+            <dt>When to use it</dt><dd>Energy per request, per step or per epoch in Python code; baselines for validating a simulator's energy model.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/InfSim_07_Power_and_Energy/#slide-11">InfSim 07: measuring energy per request</a>; <a href="https://brendanjameslynskey.github.io/InfSim_10_Further_Learning/#slide-11">InfSim 10's reading list</a>.</dd></dl>
+            <div class="doc">Docs: <a href="https://ml.energy/zeus/measure">Zeus: measuring energy</a> &middot; Paper: <a href="https://arxiv.org/abs/2208.06102">You, Chung and Chowdhury, Zeus (arXiv:2208.06102)</a></div></div>
+    </div>
+</section>
+
+<section class="slide" id="slide-08">
+    <div class="slide-number">08</div>
+    <h2>CPU and Wall Energy: RAPL and Power Analysers</h2>
+    <p>Both were tried here. What happened, as recorded:</p>
+    <ul>
+        <li><code>perf stat -e power/energy-pkg/</code> (the RAPL package-energy event perf lists: power/energy-cores/, power/energy-gpu/, power/energy-pkg/): exit status 1, "No supported events found."; with <code>-a</code> (system-wide): exit status 1. RAPL events are system-wide, so they need perf_event_paranoid 0 or lower, or CAP_PERFMON.</li>
+        <li><code>/sys/class/powercap/intel-rapl:0/energy_uj</code>: mode 400, owned by uid 0; reading it as a user: PermissionError: Permission denied. The world-readable <code>max_energy_range_uj</code> next to it is 65,532,610,987 µJ: the counter wraps after 65.5 kJ, about 14 minutes at the package's 77 W <code>long_term</code> limit.</li>
+    </ul>
+    <p>So no CPU energy reading appears in this deck. That is the usual situation for an unprivileged user on a current kernel; the cards say what the reading would mean.</p>
+    <div class="tool-cards">
+        <div class="tool-card" id="card-rapl"><h3>RAPL (CPU package energy)<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>Intel's Running Average Power Limit, also implemented by recent AMD CPUs, keeps energy counters per domain (package, cores, integrated GPU, and on servers DRAM) in model-specific registers. Linux exposes them as <code>/sys/class/powercap/intel-rapl:*/energy_uj</code> and as perf's <code>power/energy-pkg/</code> events; energy over an interval is the difference of two reads.</dd>
+            <dt>Overhead</dt><dd>A register or file read, essentially free; the counters update about every millisecond.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>The package domain is the CPU, not the wall: no power-supply losses, disks, fans or (on desktops) memory. On older parts such as this Ivy Bridge the energy is generally reported to be modelled from activity rather than measured. <a href="https://doi.org/10.1145/3177754">Khan et al. (RAPL in Action)</a> report open issues: driver support, non-atomic register updates and unpredictable update timing. The counter wraps (here after 65.5 kJ, RESULTS.md), so long runs need several reads. Since 2020 Linux makes <code>energy_uj</code> root-only, because fine-grained energy readings leak secrets through a side channel (<a href="https://platypusattack.com/">PLATYPUS</a>).</dd>
+            <dt>When to use it</dt><dd>CPU energy of a long run, with privileges (root, CAP_PERFMON, or <code>perf_event_paranoid</code> 0 or lower). For the whole machine, an external meter.</dd>
+            <dt>Where this GitHub uses it</dt><dd>Here only, as the probe above; Zeus reads it for CPU energy.</dd></dl>
+            <div class="doc">Docs: <a href="https://www.kernel.org/doc/html/latest/power/powercap/powercap.html">Linux powercap framework</a></div></div>
+        <div class="tool-card" id="card-powermeter"><h3>External power analysers and board telemetry<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>A meter between the wall and the machine (or a shunt or current clamp on a supply rail) measures voltage and current and integrates power over time. Board telemetry is the same idea built in: current sensors on the accelerator card's rails, read through its management interface.</dd>
+            <dt>Overhead</dt><dd>None on the device: the measurement is outside it. The cost is equipment and a manual setup.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>The most trustworthy number, and the least specific: a wall meter includes the power supply's losses and everything in the box, so it needs an idle baseline subtracted. A meter that samples slowly misses short transients; synchronising its readings with the program's phases takes care.</dd>
+            <dt>When to use it</dt><dd>As the reference that RAPL, NVML and simulator energy models are calibrated against, and for anything quoted as "wall power".</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/InfSim_07_Power_and_Energy/#slide-09">InfSim 07: silicon-level power measurement</a>; the nvidia-smi study above validated against one.</dd></dl></div>
+    </div>
+</section>
+
+<section class="slide" id="slide-09">
+    <div class="slide-number">09</div>
+    <h2>Traces and Framework Profilers</h2>
+    <p>A profile aggregates; a trace keeps every event with its start and duration, so overlap, gaps and ordering are visible. The simulators in this series write traces in the same format the framework profilers do, which is the point: a simulated timeline and a measured one open side by side. Both framework profilers ran here on Torch_Sim_Frontend's two-layer tiny Llama:</p>
+    <div class="table-wrap"><table>
+<thead><tr><th>Runtime</th><th>Plain</th><th>Profiled</th><th>Overhead</th><th>Events recorded</th></tr></thead>
+<tbody>
+<tr><td>PyTorch eager, <code>torch.profiler</code> (CPU activity, shapes)</td><td>8.19 ms</td><td>9.42 ms</td><td>1.15x</td><td>15,270 (30 passes)</td></tr>
+<tr><td>ONNX Runtime CPU EP, <code>enable_profiling</code></td><td>5.69 ms</td><td>9.64 ms</td><td>1.70x</td><td>6,512 (6,288 KB of JSON for 35 runs)</td></tr>
+</tbody></table></div>
+    <p class="src">Source: <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/blob/main/snippets/RESULTS.md">snippets/RESULTS.md</a> in _simeng_build</p>
+    <div class="table-wrap"><table>
+<thead><tr><th>PyTorch operator</th><th>Calls</th><th>Self CPU share</th><th></th><th>ONNX operator type</th><th>Share of node time</th></tr></thead>
+<tbody>
+<tr><td><code>aten::mm</code></td><td>450</td><td>50.9%</td><td></td><td>MatMul</td><td>54.8%</td></tr>
+<tr><td><code>aten::_scaled_dot_product_flash_attention_for_cpu</code></td><td>60</td><td>8.9%</td><td></td><td>Mul</td><td>8.2%</td></tr>
+<tr><td><code>aten::mul</code></td><td>660</td><td>7.8%</td><td></td><td>Add</td><td>4.9%</td></tr>
+<tr><td><code>aten::index_select</code></td><td>30</td><td>5.5%</td><td></td><td>Transpose</td><td>4.1%</td></tr>
+<tr><td><code>aten::silu</code></td><td>60</td><td>4.2%</td><td></td><td>Where</td><td>2.9%</td></tr>
+<tr><td><code>aten::add</code></td><td>420</td><td>3.5%</td><td></td><td>Pow</td><td>2.5%</td></tr>
+</tbody></table></div>
+    <p class="src">Source: <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/blob/main/snippets/RESULTS.md">snippets/RESULTS.md</a> in _simeng_build</p>
+    <div class="tool-cards">
+        <div class="tool-card" id="card-perfetto"><h3>Perfetto and the Chrome trace format<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>The Chrome trace-event format is JSON: complete events (<code>"ph":"X"</code>, start and duration in microseconds), counters (<code>"C"</code>) and metadata (<code>"M"</code>), grouped by process and thread. <a href="https://ui.perfetto.dev">Perfetto</a> (and <code>chrome://tracing</code>) draws them as a timeline and can query them with SQL.</dd>
+            <dt>Overhead</dt><dd>The cost is in size: one event per kernel or operator per run grows fast (the ONNX Runtime row of the table above: megabytes of JSON for a few dozen runs of a tiny model). Trace a window, sample, or trace only events over a threshold.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>As accurate as whoever wrote the timestamps; clocks of different sources must be aligned before a measured and a simulated trace are compared. Large JSON traces load slowly; Perfetto's binary format scales better.</dd>
+            <dt>When to use it</dt><dd>Whenever the question is "why", not "how much": idle gaps, serialisation, a queue that never drains.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/InfSim_06_Metrics_Hotspots_Validation/#slide-05">InfSim 06: traces in Perfetto</a>; <code>disagg-sim --trace</code> (<a href="https://github.com/BrendanJamesLynskey/Disaggregated_Inference_Sim/blob/main/src/disagg_sim/trace.py">trace.py</a>) and <code>fhe-sim --trace</code> (<a href="https://github.com/BrendanJamesLynskey/FHE_Accelerator_Sim/blob/main/src/fhe_sim/trace.py">trace.py</a>).</dd></dl>
+            <div class="doc">Docs: <a href="https://perfetto.dev/docs/">Perfetto documentation</a></div></div>
+        <div class="tool-card" id="card-torchprof"><h3>PyTorch profiler<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd><code>torch.profiler.profile</code> records an event for every operator dispatched (<code>aten::mm</code>, &hellip;) with CPU time, and, on GPUs, kernel times through NVIDIA's CUPTI. Options record input shapes, memory and stacks; <code>key_averages()</code> aggregates, <code>export_chrome_trace</code> writes a trace for Perfetto, and a <code>schedule</code> skips warm-up steps.</dd>
+            <dt>Overhead</dt><dd>Measured here: 1.15x with CPU activity and shapes. Stacks and memory recording cost more.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Self time against total time matters as in any profiler: <code>aten::linear</code> contains <code>aten::mm</code>. The first iterations include one-off costs, so profile after warm-up. On a GPU, CPU-side operator time is launch time, not execution time; look at the kernel rows.</dd>
+            <dt>When to use it</dt><dd>Attributing a model's time to PyTorch operators, and finding the operators a cost model must cover.</dd>
+            <dt>Where this GitHub uses it</dt><dd>Here (table above: matrix multiplies take half the self CPU time); <a href="https://brendanjameslynskey.github.io/SimEng_10_PyTorch_ONNX_Frontends/">SimEng 10</a> traces the same models without running them.</dd></dl>
+            <div class="doc">Docs: <a href="https://docs.pytorch.org/docs/stable/profiler.html">torch.profiler</a></div></div>
+        <div class="tool-card" id="card-ortprof"><h3>ONNX Runtime profiler<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>With <code>SessionOptions.enable_profiling = True</code>, ONNX Runtime writes one Chrome-trace event per graph node per run (operator type, execution provider, input and output shapes, memory deltas) plus session events; <code>end_profiling()</code> returns the file.</dd>
+            <dt>Overhead</dt><dd>Measured here: 1.70x, because this tiny graph has many cheap nodes, each of which writes an event. ONNX Runtime: session initialisation 45.8 ms; first run 11.0 ms against a median of 9.6 ms afterwards.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Node names come from the graph after ONNX Runtime's optimiser has fused and folded it, so they may not match the exported graph. The first run includes allocation and kernel selection. Times are per node; parallel nodes overlap.</dd>
+            <dt>When to use it</dt><dd>Attributing time to ONNX operators and execution providers, and comparing a deployed graph's timeline with a simulator's in the same viewer.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/InfSim_09_Framework_Integration/#slide-07">InfSim 09: ONNX and ONNX Runtime</a>; the table above, on the graph exported by Torch_Sim_Frontend's own exporter.</dd></dl>
+            <div class="doc">Docs: <a href="https://onnxruntime.ai/docs/performance/tune-performance/profiling-tools.html">ONNX Runtime profiling tools</a></div></div>
+        <div class="tool-card" id="card-nsight"><h3>NVIDIA Nsight Systems<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>A system-wide tracer (<code>nsys profile</code>) that records CPU thread activity, CUDA API calls, GPU kernels and memory copies, and user annotations (NVTX ranges) on one timeline. Nsight Compute is its per-kernel counterpart. Not run here: no NVIDIA GPU.</dd>
+            <dt>Overhead</dt><dd>Low for API and kernel tracing, so whole training or serving steps can be captured; CPU sampling and many NVTX ranges add more. Captures are large.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Shows overlap and gaps, not why a kernel is slow (that is Nsight Compute's job). Annotate phases with NVTX, or the timeline is a wall of kernel names.</dd>
+            <dt>When to use it</dt><dd>When a GPU's utilisation is low and the question is where the idle gaps are: launch overhead, host-side work, synchronisation, copies.</dd>
+            <dt>Where this GitHub uses it</dt><dd>Not used; it is the GPU-side reference for the timelines the simulators produce.</dd></dl>
+            <div class="doc">Docs: <a href="https://docs.nvidia.com/nsight-systems/UserGuide/index.html">Nsight Systems user guide</a></div></div>
+    </div>
+    <div class="code-block"><div class="code-header">One node event from the ONNX Runtime profile recorded here (abridged; RESULTS.md)</div><pre><code>{"cat": "Node", "pid": 3327413, "tid": 3327413, "dur": 66, "ts": 61078, "ph": "X", "name": "node_embedding_kernel_time", "args": {"op_name": "Gather", "provider": "CPUExecutionProvider", "input_type_shape": [{"float": [1000, 256]}, {"int64": [1, 128]}], "output_type_shape": [{"float": [1, 128, 256]}]}}</code></pre></div>
+</section>
+
+<section class="slide" id="slide-10">
+    <div class="slide-number">10</div>
+    <h2>Hardware and RTL: Coverage, Activity and Power</h2>
+    <p>Verification progress is measured, too. RTL_CoSim_NTT's butterfly, rebuilt with Verilator's coverage on, run with uniform and with constrained-random stimulus, with its seeded Barrett bug and without:</p>
+    <div class="table-wrap"><table>
+<thead><tr><th>Build</th><th>Stimulus</th><th>Test result</th><th>Line</th><th>Branch</th><th>Toggle</th><th>Functional-coverage holes</th><th>Build</th><th>Run</th></tr></thead>
+<tbody>
+<tr><td>plain</td><td>uniform</td><td>passed</td><td>-</td><td>-</td><td>-</td><td><code>a_zero</code>, <code>a_max</code>, <code>b_zero</code>, <code>b_max</code>, <code>w_one</code>, <code>w_max</code>, <code>corr_2_x_sum_wraps</code>, <code>corr_2_x_diff_borrows</code></td><td>13 s</td><td>1.73 s</td></tr>
+<tr><td>plain</td><td>constrained</td><td>passed</td><td>-</td><td>-</td><td>-</td><td>none</td><td>13 s</td><td>1.52 s</td></tr>
+<tr><td>plain + bug</td><td>uniform</td><td>passed (bug missed)</td><td>-</td><td>-</td><td>-</td><td><code>a_zero</code>, <code>a_max</code>, <code>b_zero</code>, <code>b_max</code>, <code>w_one</code>, <code>w_max</code>, <code>corr_2_x_sum_wraps</code>, <code>corr_2_x_diff_borrows</code></td><td>12 s</td><td>1.66 s</td></tr>
+<tr><td>plain + bug</td><td>constrained</td><td>FAILED (bug caught)</td><td>-</td><td>-</td><td>-</td><td>none</td><td>12 s</td><td>1.58 s</td></tr>
+<tr><td>cov</td><td>uniform</td><td>passed</td><td>7/7</td><td>4/4</td><td>1664/1836</td><td><code>a_zero</code>, <code>a_max</code>, <code>b_zero</code>, <code>b_max</code>, <code>w_one</code>, <code>w_max</code>, <code>corr_2_x_sum_wraps</code>, <code>corr_2_x_diff_borrows</code></td><td>30 s</td><td>1.95 s</td></tr>
+<tr><td>cov</td><td>constrained</td><td>passed</td><td>7/7</td><td>4/4</td><td>1664/1836</td><td>none</td><td>30 s</td><td>1.96 s</td></tr>
+<tr><td>cov + bug</td><td>uniform</td><td>passed (bug missed)</td><td>4/4</td><td>6/6</td><td>1664/1836</td><td><code>a_zero</code>, <code>a_max</code>, <code>b_zero</code>, <code>b_max</code>, <code>w_one</code>, <code>w_max</code>, <code>corr_2_x_sum_wraps</code>, <code>corr_2_x_diff_borrows</code></td><td>30 s</td><td>1.97 s</td></tr>
+<tr><td>cov + bug</td><td>constrained</td><td>FAILED (bug caught)</td><td>4/4</td><td>6/6</td><td>1664/1836</td><td>none</td><td>30 s</td><td>1.93 s</td></tr>
+</tbody></table></div>
+    <p class="src">Source: <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/blob/main/snippets/RESULTS.md">snippets/RESULTS.md</a> in _simeng_build</p>
+    <p><strong>Uniform stimulus reaches every line and branch, and the same toggles as constrained stimulus, and still misses the bug.</strong> Only the functional-coverage holes (<code>corr_2_x_sum_wraps</code>, <code>corr_2_x_diff_borrows</code>) show that the situations that expose it never happened. The toggle points neither stimulus reaches are bits that cannot move for this prime and width.</p>
+    <div class="tool-cards">
+        <div class="tool-card" id="card-codecov"><h3>Code coverage (coverage.py, llvm-cov, gcov)<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>Records which lines, branches or regions the tests executed: <code>coverage.py</code> (<code>pytest-cov</code>) traces Python lines; <code>cargo llvm-cov</code> and <code>gcov</code>/<code>gcovr</code> use counters the compiler inserts.</dd>
+            <dt>Overhead</dt><dd>Measured on the simulation of slide 03: 2.59x for line coverage and 2.85x with branches. Compiled instrumentation costs less.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Exact about what ran, silent about what was checked: executing a line is not asserting its result. A low number is a real warning; a high one is not proof (SimEng 06's medium suite had 100% line and branch coverage and a 67% mutation score).</dd>
+            <dt>When to use it</dt><dd>Always, cheaply, as a floor; then mutation testing to measure the checks.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/SimEng_06_Testing_Frameworks/#slide-09">SimEng 06: coverage, and what it does not tell you</a>; every Jenkins pipeline in <a href="https://brendanjameslynskey.github.io/SimEng_07_Jenkins_for_Simulation_Teams/">SimEng 07</a> records it.</dd></dl>
+            <div class="doc">Docs: <a href="https://coverage.readthedocs.io/">coverage.py</a> &middot; <a href="https://github.com/taiki-e/cargo-llvm-cov">cargo-llvm-cov</a></div></div>
+        <div class="tool-card" id="card-rtlcov"><h3>Verilator coverage and functional coverage<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>Built with <code>--coverage</code>, Verilator counts line (block) and branch execution and every toggle of every signal bit, and writes <code>coverage.dat</code> at the end; <code>verilator_coverage</code> merges and annotates. <strong>Functional coverage</strong> is different: named bins the testbench samples from each transaction (operand at its maximum, a sum that wraps) and crosses of them, counting the situations the stimulus created.</dd>
+            <dt>Overhead</dt><dd>Measured above: the coverage build took about twice as long to compile and the run was slightly slower (most of a run here is cocotb's Python). Functional coverage costs what the sampling code costs.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Code and toggle coverage measure what the design did, not whether the stimulus was interesting; as the table shows, they saturate early. Functional coverage is only as good as the bins someone thought to write; the crosses that make a bug <em>observable</em> are the ones that matter.</dd>
+            <dt>When to use it</dt><dd>Code and toggle coverage to find dead logic and untested pins; functional coverage to decide when verification is done.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/SimEng_05_Verification_Bridge_cocotb/#slide-07">SimEng 05: functional coverage and crosses</a> (<a href="https://github.com/BrendanJamesLynskey/RTL_CoSim_NTT/blob/main/src/ntt_cosim/coverage.py">coverage.py</a> in RTL_CoSim_NTT), <a href="https://brendanjameslynskey.github.io/SimEng_05_Verification_Bridge_cocotb/#slide-10">Verilator in CI</a>; the table above.</dd></dl>
+            <div class="doc">Docs: <a href="https://verilator.org/guide/latest/simulating.html#coverage-analysis">Verilator coverage analysis</a></div></div>
+        <div class="tool-card" id="card-toggles"><h3>Toggle counts and switching activity<span class="kind">method</span></h3><dl>
+            <dt>Principle</dt><dd>Dynamic power is roughly activity &times; capacitance &times; V&sup2; &times; f. Counting how often registers change during a workload estimates the activity term before a netlist exists, and shows how strongly power depends on the data.</dd>
+            <dt>Overhead</dt><dd>A comparison per sampled bit per cycle in the testbench, or Verilator's toggle coverage; either is a fraction of the simulation's cost.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Every register bit counts equally; combinational nets, glitches, clock tree and memories are missing. It ranks workloads; it does not give watts.</dd>
+            <dt>When to use it</dt><dd>Early, to compare data patterns or architectures; replaced by an RTL power flow once one exists.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/SimEng_05_Verification_Bridge_cocotb/#slide-13">SimEng 05: switching activity as a power proxy</a> (random 50-bit data is the worst case, and FHE data is random).</dd></dl></div>
+        <div class="tool-card" id="card-rtlpower"><h3>RTL power flows (SAIF/VCD into a power tool)<span class="kind">method</span></h3><dl>
+            <dt>Principle</dt><dd>Simulation writes switching activity, either per-signal toggle rates and time at each value (SAIF) or full waveforms (VCD, or the proprietary FSDB). A power-analysis tool annotates the activity onto the RTL or the gate-level netlist and applies the cell library's energy and leakage data. The tools are commercial (the large EDA vendors each sell one); this series does not use them.</dd>
+            <dt>Overhead</dt><dd>Waveform dumps are huge and slow the simulation many times over; SAIF is far smaller. The power run itself takes minutes to hours per window of activity.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Better the later the stage: RTL-level estimates guess the synthesised logic, gate-level after placement knows the wires. The vectors decide everything: a toy test bench gives toy activity, which is why the simulator's workload traces should drive it.</dd>
+            <dt>When to use it</dt><dd>Once RTL exists: to sign off a power budget, and to extract per-operation energies that replace a simulator's illustrative coefficients.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/InfSim_07_Power_and_Energy/#slide-09">InfSim 07: from the simulator to RTL power</a> (described, not run).</dd></dl></div>
+        <div class="tool-card" id="card-mutation"><h3>Mutation testing (mutmut, cargo-mutants)<span class="kind">method</span></h3><dl>
+            <dt>Principle</dt><dd>Measures the tests rather than the code: a tool makes small deliberate bugs (mutants: <code>&gt;=</code> to <code>&gt;</code>, <code>+</code> to <code>-</code>) and runs the suite against each; the mutation score is the share it catches.</dd>
+            <dt>Overhead</dt><dd>One test-suite run per mutant, and a crate yields hundreds of mutants (Rust_DES_Kernel's table is in SimEng 06 slide 09), so a run takes the suite's time hundreds of times over: it runs in Jenkins, not on every commit.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Equivalent mutants change code but not behaviour and can never be caught, so 100% is not always reachable; boundary mutants on floats are mostly noise. A survivor is a question, not automatically a missing test.</dd>
+            <dt>When to use it</dt><dd>After coverage is high, to find code that runs under test but is never checked.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/SimEng_06_Testing_Frameworks/#slide-07">SimEng 06: mutation testing</a> and <a href="https://brendanjameslynskey.github.io/SimEng_06_Testing_Frameworks/#slide-09">slide 09</a> (Rust_DES_Kernel, after three rounds of tests written for survivors).</dd></dl>
+            <div class="doc">Docs: <a href="https://mutmut.readthedocs.io/">mutmut</a> &middot; <a href="https://mutants.rs/">cargo-mutants</a></div></div>
+    </div>
+</section>
+
+<section class="slide" id="slide-11">
+    <div class="slide-number">11</div>
+    <h2>Memory Systems: DRAMsim3 and Ramulator</h2>
+    <p>Memory_System_Sim, this series' own command-level DRAM model, was validated four ways: closed forms, an independent protocol checker on Hypothesis-generated traces, behavioural checks, and a cross-check against DRAMsim3 on the same traces, timing and address mapping (<a href="https://brendanjameslynskey.github.io/SimEng_04_Memory_Systems_DRAM_HBM/#slide-11">SimEng 04 slide 11</a>). The reference simulators:</p>
+    <div class="tool-cards">
+        <div class="tool-card" id="card-dramsim3"><h3>DRAMsim3<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>A cycle-accurate model of a DRAM controller and devices (DDR3/4, LPDDR, GDDR, HBM), configured by an <code>.ini</code> file of JEDEC timing parameters and organisation; it takes a trace or a CPU simulator's requests, issues commands cycle by cycle under every timing constraint, and reports bandwidth, latency, power and, optionally, temperature.</dd>
+            <dt>Overhead</dt><dd>Run time grows with simulated cycles, not with requests, so idle periods still cost; it is usually run as a component of a larger simulator or on traces.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>The devices follow the standard; the <em>controller</em> is one design among many (per-bank queues, scheduling and page policy). The SimEng 04 cross-check agreed within a few per cent where the device dominates and differed by tens of per cent on interleaved streams, purely because the two controllers queue differently. A cross-check that agrees everywhere usually means shared assumptions.</dd>
+            <dt>When to use it</dt><dd>As a reference model for a new DRAM model, or plugged into a CPU or accelerator simulator when memory timing matters more than a bandwidth figure.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/SimEng_04_Memory_Systems_DRAM_HBM/#slide-11">SimEng 04: cross-checked against DRAMsim3</a>; <a href="https://github.com/BrendanJamesLynskey/Memory_System_Sim/blob/main/examples/dramsim3_crosscheck.md">the cross-check data</a> in Memory_System_Sim.</dd></dl>
+            <div class="doc">Paper: <a href="https://doi.org/10.1109/LCA.2020.2973991">Li et al., DRAMsim3, IEEE CAL 2020</a> &middot; <a href="https://github.com/umd-memsys/DRAMsim3">source</a></div></div>
+        <div class="tool-card" id="card-ramulator"><h3>Ramulator<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>A cycle-level DRAM simulator built around a generic state machine of each standard's hierarchy (channel, rank, bank group, bank, row), so new standards are added as tables rather than new code. Ramulator 2.0 is a modular rewrite.</dd>
+            <dt>Overhead</dt><dd>Comparable in kind to DRAMsim3: cycle-by-cycle, run on traces or inside a CPU simulator.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>As with DRAMsim3, the controller policy you configure decides most results that the device's timing does not; and how closely each standard's model has been checked against real parts varies, so look up the one you use in its papers and repository before quoting absolute numbers. Not run here.</dd>
+            <dt>When to use it</dt><dd>When the standard or the research mechanism (refresh schemes, RowHammer mitigations) is one Ramulator models and DRAMsim3 does not.</dd>
+            <dt>Where this GitHub uses it</dt><dd>Named as an alternative reference in <a href="https://brendanjameslynskey.github.io/SimEng_04_Memory_Systems_DRAM_HBM/#slide-13">SimEng 04</a> and <a href="https://brendanjameslynskey.github.io/InfSim_04_Simulator_Landscape/#slide-05">InfSim 04</a>; not run.</dd></dl>
+            <div class="doc">Papers: <a href="https://doi.org/10.1109/LCA.2015.2414456">Kim, Yang and Mutlu, Ramulator, IEEE CAL 2016</a> &middot; <a href="https://arxiv.org/abs/2308.11030">Luo et al., Ramulator 2.0 (arXiv:2308.11030)</a></div></div>
+    </div>
+</section>
+
+<section class="slide" id="slide-12">
+    <div class="slide-number">12</div>
+    <h2>Architecture Estimators: McPAT, CACTI, Accelergy and Timeloop</h2>
+    <p>Before RTL exists, power and area come from estimators that build a component from its structure and technology parameters. They are fast, which is the point: they rank design options. They are not sign-off, and their error bars come from their own validation papers.</p>
+    <div class="diagram-flow">
+        <div class="diagram-box">architecture description</div><div class="diagram-arrow">&rarr;</div>
+        <div class="diagram-box">component models (CACTI for arrays)</div><div class="diagram-arrow">&rarr;</div>
+        <div class="diagram-box">energy per action, area</div><div class="diagram-arrow">&rarr;</div>
+        <div class="diagram-box">&times; action counts from a simulator or mapper</div>
+    </div>
+    <div class="tool-cards">
+        <div class="tool-card" id="card-mcpat"><h3>McPAT<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>An integrated power, area and timing model for multicore processors: cores, caches (through CACTI), networks on chip, memory controllers and clocking, described in an XML file with technology nodes from 90 to 22 nm. Activity statistics from a performance simulator (gem5 is the usual companion) turn per-access energies into runtime power.</dd>
+            <dt>Overhead</dt><dd>Analytical: seconds per configuration, so it can sit in a design-space sweep.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>The original paper validated it against four published processors (Niagara, Niagara 2, Alpha 21364 and a Xeon); <a href="https://doi.org/10.1109/HPCA.2015.7056064">Xi et al. (HPCA 2015)</a> found that its predictions can have significant error, because some models are incomplete, too high-level, or assume implementations that differ from the core being studied. Use it for relative comparisons inside one configuration family, not absolute watts.</dd>
+            <dt>When to use it</dt><dd>Early processor exploration with a CPU simulator. For accelerators, Accelergy fits better.</dd>
+            <dt>Where this GitHub uses it</dt><dd>Named in <a href="https://brendanjameslynskey.github.io/InfSim_07_Power_and_Energy/#slide-09">InfSim 07's power ladder</a> and <a href="https://brendanjameslynskey.github.io/InfSim_10_Further_Learning/#slide-11">InfSim 10's reading list</a>; not run.</dd></dl>
+            <div class="doc">Paper: <a href="https://doi.org/10.1145/1669112.1669172">Li et al., McPAT, MICRO 2009</a> &middot; <a href="https://github.com/HewlettPackard/mcpat">source</a></div></div>
+        <div class="tool-card" id="card-cacti"><h3>CACTI<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>An analytical model of SRAM and DRAM arrays, caches and scratchpads: given capacity, block size, associativity, ports, banks, technology node and cell type, it searches internal organisations (subarray splits, wire types) and reports access time, cycle time, dynamic energy per read and write, leakage and area for the best one under its optimisation target.</dd>
+            <dt>Overhead</dt><dd>CACTI took 0.27 to 3.51 s per configuration (26 s for all 14).</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Its technology data are ITRS projections, not a foundry's, so absolute numbers at a node are estimates; the CACTI 6.0 report validated its new wire and bitline models within 12&ndash;13% of SPICE on a 65 nm predictive model, components rather than a whole array against silicon. The transistor type dominates leakage (slide 13: over a thousand-fold between <code>itrs-hp</code> and <code>itrs-lstp</code>). The smallest node with data is 22 nm; scaling beyond is your assumption.</dd>
+            <dt>When to use it</dt><dd>Sizing an on-chip memory: how area, energy and latency grow with capacity, for a scratchpad, cache or buffer. McPAT and Accelergy call it for their arrays.</dd>
+            <dt>Where this GitHub uses it</dt><dd>Slide 13 here (a 22 nm capacity sweep, recorded for the area model in FHE_Accelerator_Sim); named in <a href="https://brendanjameslynskey.github.io/InfSim_07_Power_and_Energy/#slide-09">InfSim 07</a>.</dd></dl>
+            <div class="doc">Papers: <a href="https://doi.org/10.1145/3085572">Balasubramonian et al., CACTI 7, ACM TACO 2017</a> &middot; <a href="https://users.cs.utah.edu/~rajeev/cacti6/cacti6-tr.pdf">CACTI 6.0 technical report</a> &middot; <a href="https://github.com/HewlettPackard/cacti">source</a></div></div>
+        <div class="tool-card" id="card-accelergy"><h3>Accelergy and Timeloop<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd><strong>Timeloop</strong> describes an accelerator as a hierarchy of buffers, networks and arithmetic units, and a tensor workload as loop nests; its mapper searches the space of mappings (tiling, loop order, spatial unrolling) and, for each, counts accesses at every level and estimates cycles as the slowest component in a pipeline. <strong>Accelergy</strong> turns those action counts into energy and area: each component's per-action energy comes from plug-ins (CACTI for memories, tables for arithmetic) at a stated technology.</dd>
+            <dt>Overhead</dt><dd>Evaluating one mapping is analytical and fast; the cost is the search, because mapspaces are huge. In the Timeloop paper, 480,000 mappings of one convolution layer were all within 5% of peak performance yet varied nearly 19&times; in energy.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Timeloop was validated against an NVDLA-derived design's detailed simulator and against Eyeriss's published 65 nm results; Accelergy reports 95% accuracy against post-layout energy on Eyeriss. Its performance model assumes negligible pipeline stalls (reasonable with double buffering), and the energy is only as good as the per-action tables.</dd>
+            <dt>When to use it</dt><dd>Comparing dataflows and buffer sizes for tensor accelerators before RTL; always evaluate an architecture at its best mapping, or the comparison is unfair.</dd>
+            <dt>Where this GitHub uses it</dt><dd>Named in <a href="https://brendanjameslynskey.github.io/InfSim_04_Simulator_Landscape/#slide-04">InfSim 04's landscape</a>, <a href="https://brendanjameslynskey.github.io/InfSim_07_Power_and_Energy/#slide-09">InfSim 07</a> and <a href="https://brendanjameslynskey.github.io/InfSim_10_Further_Learning/#slide-04">InfSim 10</a>; not run (CACTI, which it uses for arrays, is on slide 13).</dd></dl>
+            <div class="doc">Papers: <a href="https://doi.org/10.1109/ISPASS.2019.00042">Parashar et al., Timeloop, ISPASS 2019</a> &middot; <a href="https://doi.org/10.1109/ICCAD45719.2019.8942149">Wu, Emer and Sze, Accelergy, ICCAD 2019</a> &middot; <a href="https://timeloop.csail.mit.edu/">Timeloop and Accelergy site</a></div></div>
+    </div>
+</section>
+
+<section class="slide" id="slide-13">
+    <div class="slide-number">13</div>
+    <h2>CACTI on This Machine: SRAM Against Capacity</h2>
+    <p>CACTI 7 (HewlettPackard/cacti, built here) swept over scratchpad capacity at 22 nm, with both of its SRAM transistor types and, for 64 MiB, more banks. Only the size, bank count and cell type differ from the upstream <code>cache.cfg</code>; every configuration file and output is in <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/tree/main/snippets/t12/cacti">snippets/t12/cacti</a>. These are model outputs from ITRS-based projections, not measurements of silicon.</p>
+    <div class="control-panel">
+        <div class="sim-grid">
+            <div class="control-row"><label for="ca-m">Plot</label><select id="ca-m"><option value="3">Area (mm²)</option><option value="5">Read energy per 64-byte access (nJ)</option><option value="9">Access time (ns)</option><option value="8">Leakage (mW)</option></select></div>
+        </div>
+        <div class="canvas-wrap"><svg id="ca-svg" viewBox="0 0 720 300" width="720" height="300" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    </div>
+    <script>
+    (function () {
+        const CACTI = [["Capacity", "Cells", "Banks", "Area (mm\u00b2)", "mm\u00b2 per MiB", "Read energy (nJ)", "pJ per bit read", "Write energy (nJ)", "Leakage (mW)", "Access time (ns)", "Cycle time (ns)", "Area efficiency"], ["64 KiB", "itrs-hp", "1", "0.055", "0.883", "0.0150", "0.029", "0.0452", "20.91", "0.378", "0.346", "75.5%"], ["256 KiB", "itrs-hp", "1", "0.293", "1.171", "0.0473", "0.092", "0.0699", "77.25", "0.628", "0.613", "56.9%"], ["1 MiB", "itrs-hp", "1", "1.079", "1.079", "0.1118", "0.218", "0.1192", "296.23", "1.198", "1.619", "61.8%"], ["4 MiB", "itrs-hp", "1", "4.290", "1.072", "0.2499", "0.488", "0.2572", "1,184.93", "2.140", "1.619", "62.2%"], ["16 MiB", "itrs-hp", "1", "15.977", "0.999", "0.5240", "1.023", "0.5694", "4,916.85", "3.731", "0.613", "66.8%"], ["64 MiB", "itrs-hp", "1", "57.264", "0.895", "1.0320", "2.016", "1.1229", "19,616.50", "6.703", "0.613", "74.5%"], ["64 KiB", "itrs-lstp", "1", "0.061", "0.975", "0.0240", "0.047", "0.0352", "0.02", "1.013", "1.272", "68.4%"], ["256 KiB", "itrs-lstp", "1", "0.286", "1.144", "0.0606", "0.118", "0.0641", "0.06", "1.622", "2.558", "58.3%"], ["1 MiB", "itrs-lstp", "1", "1.284", "1.284", "0.1362", "0.266", "0.1397", "0.25", "2.716", "2.558", "52.0%"], ["4 MiB", "itrs-lstp", "1", "3.886", "0.971", "0.2777", "0.542", "0.2544", "0.96", "5.068", "7.457", "68.6%"], ["16 MiB", "itrs-lstp", "1", "15.136", "0.946", "0.6242", "1.219", "0.6392", "3.92", "8.561", "2.967", "70.5%"], ["64 MiB", "itrs-lstp", "1", "57.014", "0.891", "1.2132", "2.370", "1.2283", "15.69", "15.484", "2.967", "74.9%"], ["64 MiB", "itrs-hp", "8", "66.487", "1.039", "1.0709", "2.092", "1.0856", "19,345.04", "6.996", "1.619", "64.2%"], ["64 MiB", "itrs-hp", "32", "66.623", "1.041", "1.0492", "2.049", "1.0641", "21,485.28", "7.158", "1.844", "64.1%"]];  // from _simeng_build/snippets/RESULTS.md
+        const svg = document.getElementById('ca-svg'), sel = document.getElementById('ca-m');
+        const NS = 'http://www.w3.org/2000/svg';
+        const mib = c => c.endsWith('KiB') ? parseFloat(c) / 1024 : parseFloat(c);
+        const num = s => parseFloat(String(s).replace(/,/g, ''));
+        const SER = [['itrs-hp', '#aabd59'], ['itrs-lstp', '#e3b174']];
+        function el(t, a, txt) { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; svg.appendChild(e); return e; }
+        function draw() {
+            svg.innerHTML = '';
+            const col = +sel.value, name = CACTI[0][col];
+            const rows = CACTI.slice(1).filter(r => r[2] === '1');
+            const pts = SER.map(([cell, c]) => [cell, c, rows.filter(r => r[1] === cell).map(r => [mib(r[0]), num(r[col])])]);
+            const ys = pts.flatMap(p => p[2].map(q => q[1]));
+            const L = 70, R = 700, T = 20, B = 260;
+            const x0 = Math.log10(1 / 16), x1 = Math.log10(64);
+            const y0 = Math.floor(Math.log10(Math.min(...ys))), y1 = Math.ceil(Math.log10(Math.max(...ys)));
+            const X = v => L + (Math.log10(v) - x0) / (x1 - x0) * (R - L);
+            const Y = v => B - (Math.log10(v) - y0) / (y1 - y0) * (B - T);
+            for (let e = y0; e <= y1; e++) { el('line', { x1: L, x2: R, y1: Y(10 ** e), y2: Y(10 ** e), stroke: '#3a322b' }); el('text', { x: L - 6, y: Y(10 ** e) + 4, 'text-anchor': 'end', fill: '#a2978b', 'font-size': 10, 'font-family': 'Geist Mono, monospace' }, String(10 ** e)); }
+            [1 / 16, 1 / 4, 1, 4, 16, 64].forEach(v => { el('line', { x1: X(v), x2: X(v), y1: T, y2: B, stroke: '#3a322b' }); el('text', { x: X(v), y: B + 16, 'text-anchor': 'middle', fill: '#a2978b', 'font-size': 10, 'font-family': 'Geist Mono, monospace' }, v < 1 ? (v * 1024) + ' KiB' : v + ' MiB'); });
+            el('text', { x: (L + R) / 2, y: B + 34, 'text-anchor': 'middle', fill: '#a2978b', 'font-size': 10, 'font-family': 'Geist Mono, monospace' }, 'capacity (log scale); ' + name + ' (log scale); one bank');
+            pts.forEach(([cell, c, p]) => {
+                el('polyline', { points: p.map(([x, y]) => X(x) + ',' + Y(y)).join(' '), fill: 'none', stroke: c, 'stroke-width': 2 });
+                p.forEach(([x, y]) => { const d = el('circle', { cx: X(x), cy: Y(y), r: 4, fill: c }); const t = document.createElementNS(NS, 'title'); t.textContent = cell + ', ' + (x < 1 ? x * 1024 + ' KiB' : x + ' MiB') + ': ' + y; d.appendChild(t); });
+            });
+            el('rect', { x: L + 10, y: T + 6, width: 150, height: 44, rx: 4, fill: '#1c1815', stroke: '#3a322b' });
+            SER.forEach(([cell, c], i) => { el('rect', { x: L + 20, y: T + 16 + i * 18, width: 12, height: 4, fill: c }); el('text', { x: L + 40, y: T + 21 + i * 18, fill: '#efe8dc', 'font-size': 10, 'font-family': 'Geist Mono, monospace' }, cell); });
+        }
+        sel.onchange = draw; draw();
+    })();
+    </script>
+    <div class="table-wrap"><table>
+<thead><tr><th>Capacity</th><th>Cells</th><th>Banks</th><th>Area (mm²)</th><th>mm² per MiB</th><th>Read energy (nJ)</th><th>pJ per bit read</th><th>Write energy (nJ)</th><th>Leakage (mW)</th><th>Access time (ns)</th><th>Cycle time (ns)</th><th>Area efficiency</th></tr></thead>
+<tbody>
+<tr><td>64 KiB</td><td>itrs-hp</td><td>1</td><td>0.055</td><td>0.883</td><td>0.0150</td><td>0.029</td><td>0.0452</td><td>20.91</td><td>0.378</td><td>0.346</td><td>75.5%</td></tr>
+<tr><td>256 KiB</td><td>itrs-hp</td><td>1</td><td>0.293</td><td>1.171</td><td>0.0473</td><td>0.092</td><td>0.0699</td><td>77.25</td><td>0.628</td><td>0.613</td><td>56.9%</td></tr>
+<tr><td>1 MiB</td><td>itrs-hp</td><td>1</td><td>1.079</td><td>1.079</td><td>0.1118</td><td>0.218</td><td>0.1192</td><td>296.23</td><td>1.198</td><td>1.619</td><td>61.8%</td></tr>
+<tr><td>4 MiB</td><td>itrs-hp</td><td>1</td><td>4.290</td><td>1.072</td><td>0.2499</td><td>0.488</td><td>0.2572</td><td>1,184.93</td><td>2.140</td><td>1.619</td><td>62.2%</td></tr>
+<tr><td>16 MiB</td><td>itrs-hp</td><td>1</td><td>15.977</td><td>0.999</td><td>0.5240</td><td>1.023</td><td>0.5694</td><td>4,916.85</td><td>3.731</td><td>0.613</td><td>66.8%</td></tr>
+<tr><td>64 MiB</td><td>itrs-hp</td><td>1</td><td>57.264</td><td>0.895</td><td>1.0320</td><td>2.016</td><td>1.1229</td><td>19,616.50</td><td>6.703</td><td>0.613</td><td>74.5%</td></tr>
+<tr><td>64 KiB</td><td>itrs-lstp</td><td>1</td><td>0.061</td><td>0.975</td><td>0.0240</td><td>0.047</td><td>0.0352</td><td>0.02</td><td>1.013</td><td>1.272</td><td>68.4%</td></tr>
+<tr><td>256 KiB</td><td>itrs-lstp</td><td>1</td><td>0.286</td><td>1.144</td><td>0.0606</td><td>0.118</td><td>0.0641</td><td>0.06</td><td>1.622</td><td>2.558</td><td>58.3%</td></tr>
+<tr><td>1 MiB</td><td>itrs-lstp</td><td>1</td><td>1.284</td><td>1.284</td><td>0.1362</td><td>0.266</td><td>0.1397</td><td>0.25</td><td>2.716</td><td>2.558</td><td>52.0%</td></tr>
+<tr><td>4 MiB</td><td>itrs-lstp</td><td>1</td><td>3.886</td><td>0.971</td><td>0.2777</td><td>0.542</td><td>0.2544</td><td>0.96</td><td>5.068</td><td>7.457</td><td>68.6%</td></tr>
+<tr><td>16 MiB</td><td>itrs-lstp</td><td>1</td><td>15.136</td><td>0.946</td><td>0.6242</td><td>1.219</td><td>0.6392</td><td>3.92</td><td>8.561</td><td>2.967</td><td>70.5%</td></tr>
+<tr><td>64 MiB</td><td>itrs-lstp</td><td>1</td><td>57.014</td><td>0.891</td><td>1.2132</td><td>2.370</td><td>1.2283</td><td>15.69</td><td>15.484</td><td>2.967</td><td>74.9%</td></tr>
+<tr><td>64 MiB</td><td>itrs-hp</td><td>8</td><td>66.487</td><td>1.039</td><td>1.0709</td><td>2.092</td><td>1.0856</td><td>19,345.04</td><td>6.996</td><td>1.619</td><td>64.2%</td></tr>
+<tr><td>64 MiB</td><td>itrs-hp</td><td>32</td><td>66.623</td><td>1.041</td><td>1.0492</td><td>2.049</td><td>1.0641</td><td>21,485.28</td><td>7.158</td><td>1.844</td><td>64.1%</td></tr>
+</tbody></table></div>
+    <p class="src">Source: <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit/blob/main/snippets/RESULTS.md">snippets/RESULTS.md</a> in _simeng_build</p>
+    <ul>
+        <li><strong>Area is close to linear in capacity:</strong> about 1.079 mm² per MiB at 1 MiB and 0.895 at 64 MiB with one bank (the array efficiency varies with the organisation CACTI picks). Splitting 64 MiB into 8 or 32 banks costs area for the extra decoders and wiring.</li>
+        <li><strong>Energy and latency grow much more slowly than capacity,</strong> because only one subarray is read and the cost is in the wires that reach it. From 64 KiB to 64 MiB (1,024x the capacity, itrs-hp, one bank): area x1038, read energy per access x69, access time x17.7.</li>
+        <li><strong>Leakage is a choice of transistor, not an array property.</strong> <code>itrs-hp</code> is ITRS high-performance logic transistors, <code>itrs-lstp</code> low-standby-power ones; the difference in leakage (over three orders of magnitude) is the transistor model, not the array. Large on-chip memories are built from low-leakage cells; the high-performance numbers are a pessimistic bound.</li>
+    </ul>
+</section>
+
+<section class="slide" id="slide-14">
+    <div class="slide-number">14</div>
+    <h2>Statistics of Simulation Output</h2>
+    <p>A stochastic simulator's answer is a random variable. <a href="https://brendanjameslynskey.github.io/InfSim_06_Metrics_Hotspots_Validation/#slide-06">InfSim 06 slide 06</a> sets out the techniques and <a href="https://brendanjameslynskey.github.io/InfSim_06_Metrics_Hotspots_Validation/#slide-07">slide 07</a> runs replications and common random numbers live; this card collects them with their costs and pitfalls, and adds how many runs are enough.</p>
+    <div class="tool-cards">
+        <div class="tool-card" id="card-replications"><h3>Replications, confidence intervals, warm-up, batch means and common random numbers<span class="kind">method</span></h3><dl>
+            <dt>Principle</dt><dd><strong>Replications:</strong> n independent runs (different seeds) give n samples of the metric; report the mean &plusmn; t<sub>n&minus;1</sub>&middot;s/&radic;n. <strong>Warm-up deletion:</strong> discard the start, when the system is emptier than in steady state (choose the cut-off with Welch's graphical method or a rule such as MSER). <strong>Batch means:</strong> one long run cut into batches long enough to be nearly independent, which pays warm-up once. <strong>Common random numbers (CRN):</strong> give two designs the same random streams, so the noise cancels in their difference.</dd>
+            <dt>Overhead</dt><dd>Replications cost n runs (they parallelise perfectly; InfSim 08's parallel sweeps); warm-up costs the discarded simulated time in every replication; CRN costs nothing at run time but needs a separate random stream per source of randomness so the streams stay aligned.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>The t-interval assumes roughly normal run means; with few runs and skewed metrics (tails) it is optimistic. Batches that are too short are correlated and the interval is too narrow. Not deleting warm-up biases every replication the same way, which more runs do not fix. CRN breaks when one design draws more random numbers than the other from a shared stream.</dd>
+            <dt>When to use it</dt><dd>Always for a stochastic simulator. <strong>How many runs:</strong> the half-width shrinks as 1/&radic;n, so to halve it run four times as many; run a pilot of about ten, then n &asymp; (t&middot;s/target half-width)&sup2;. Tail percentiles need many samples per run as well: a p99 from 800 requests rests on about eight.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/InfSim_06_Metrics_Hotspots_Validation/#slide-06">InfSim 06: statistics that survive review</a>; every <code>--compare</code> in Disaggregated_Inference_Sim uses CRN; <a href="https://brendanjameslynskey.github.io/InfSim_08_Accelerating_Simulators/#slide-10">InfSim 08</a> on cutting the runs needed.</dd></dl>
+            <div class="doc">Further reading: <a href="https://brendanjameslynskey.github.io/InfSim_10_Further_Learning/#slide-02">InfSim 10's simulation textbooks</a> (output analysis chapters)</div></div>
+    </div>
+</section>
+
+<section class="slide" id="slide-15">
+    <div class="slide-number">15</div>
+    <h2>Agreement as a Measurement</h2>
+    <p>The last group measures the simulator itself: does it compute the model, and does the model match something independent? Each check produces a number (differences, error per metric, a bound), so it belongs in a catalogue of measurements.</p>
+    <div class="tool-cards">
+        <div class="tool-card" id="card-agreement"><h3>Golden tests, differential tests and correlation<span class="kind">method</span></h3><dl>
+            <dt>Principle</dt><dd>A <strong>golden test</strong> compares today's output with a stored reference run and reports any difference. A <strong>differential test</strong> runs two independent implementations of the same model (a fast path and a reference, Python and Rust, Python and JavaScript) on the same inputs and requires agreement. A <strong>correlation report</strong> compares the model against measurement on a defined workload set, with an error per metric and a target.</dd>
+            <dt>Overhead</dt><dd>Golden tests are cheap; differential tests cost a second implementation and running both; correlation costs measurement campaigns on real hardware.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Golden files catch change, not error: a bug blessed into the reference is protected by it, so re-bless deliberately and review the diff. Two implementations written from the same misunderstanding agree perfectly. Decide the tolerance per quantity: exact for deterministic code, a tolerance only where maths libraries genuinely differ. A correlation fitted to the workloads it is quoted on is in-sample; hold some out.</dd>
+            <dt>When to use it</dt><dd>Golden tests on every simulator; differential tests for every port or fast path; correlation as the deliverable of validation.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/SimEng_06_Testing_Frameworks/#slide-06">SimEng 06: golden tests and re-blessing</a>; <a href="https://brendanjameslynskey.github.io/SimEng_02_Rust_Python_PyO3/#slide-09">SimEng 02: golden and differential</a>; <a href="https://brendanjameslynskey.github.io/InfSim_06_Metrics_Hotspots_Validation/#slide-08">InfSim 06: the verification ladder</a>.</dd></dl></div>
+        <div class="tool-card" id="card-bounds"><h3>Analytic bounds (roofline, schedule bounds)<span class="kind">method</span></h3><dl>
+            <dt>Principle</dt><dd>A lower bound on run time from counts alone: the <strong>roofline</strong> bound max(FLOPs / peak FLOP rate, bytes / bandwidth), and the <strong>schedule bound</strong>, the busiest resource's total busy time, since nothing finishes before its busiest resource does. Queueing formulas (M/D/1) give exact answers for simple subsystems.</dd>
+            <dt>Overhead</dt><dd>Free: a few divisions over a trace.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>Optimistic by construction: perfect overlap, peak efficiencies, no dependencies. A real schedule can sit far above it when dependencies serialise work. A simulated result <em>below</em> the bound is not a good result; it is a bug.</dd>
+            <dt>When to use it</dt><dd>As the first sanity check on any simulator output, and to say how much room an optimisation could possibly have.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/InfSim_03_LLM_Inference_Workloads/#slide-04">InfSim 03: the roofline</a>; <a href="https://brendanjameslynskey.github.io/FHESim_03_Simulating_an_FHE_Accelerator/#slide-08">FHESim 03: lower bounds</a> (<a href="https://github.com/BrendanJamesLynskey/FHE_Accelerator_Sim/blob/main/src/fhe_sim/search.py">search.py</a>); <a href="https://brendanjameslynskey.github.io/InfSim_02_Simulator_Development_Tutorial/#slide-03">InfSim 02: a queue checked against theory</a>.</dd></dl></div>
+        <div class="tool-card" id="card-flopcounter"><h3>PyTorch's FLOP counter (FlopCounterMode)<span class="kind">tool</span></h3><dl>
+            <dt>Principle</dt><dd>A dispatch mode that intercepts every operator a model runs and adds its FLOPs from a per-operator formula (matmul, convolution, attention), by module. It works on the meta device, so even a 70-billion-parameter model is counted without weights.</dd>
+            <dt>Overhead</dt><dd>One trace of the model; on the meta device no arithmetic is done.</dd>
+            <dt>Accuracy and pitfalls</dt><dd>It counts only operators it has formulas for: on a CPU trace, fused attention (<code>_scaled_dot_product_flash_attention_for_cpu</code>) has none and its FLOPs silently vanish. Conventions differ (a multiply-add is two FLOPs; masked attention scores counted or not).</dd>
+            <dt>When to use it</dt><dd>As an independent count to check a front end or a closed-form cost model against.</dd>
+            <dt>Where this GitHub uses it</dt><dd><a href="https://brendanjameslynskey.github.io/SimEng_10_PyTorch_ONNX_Frontends/#slide-12">SimEng 10: operator coverage as a metric</a> and the Torch_Sim_Frontend README (it agrees exactly on the meta trace, and misses fused CPU attention).</dd></dl>
+            <div class="doc">Source: <a href="https://github.com/pytorch/pytorch/blob/main/torch/utils/flop_counter.py">torch/utils/flop_counter.py</a></div></div>
+    </div>
+    <p>Two related methods are explained in their own decks: <a href="https://brendanjameslynskey.github.io/InfSim_06_Metrics_Hotspots_Validation/#slide-04">hot-spot attribution and causal profiling</a> (InfSim 06), and the <a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/#slide-02">USE method</a> (SimEng 11).</p>
+</section>
+
+<section class="slide" id="slide-16">
+    <div class="slide-number">16</div>
+    <h2>What to Take Away</h2>
+    <ul>
+        <li><strong>Every tool changes what it measures.</strong> On the same simulation: 1.05x for sampling at 100 Hz, 2.04x for cProfile, 2.59x for coverage, 25.63x for tracemalloc with deep tracebacks. Know the overhead before trusting the profile.</li>
+        <li><strong>Exact and representative are different properties.</strong> Cachegrind's counts are exact and its machine is not real; counters are real and multiplex; GPU power sensors average over windows that miss most of the run.</li>
+        <li><strong>Coverage measures what ran, not what was checked.</strong> Uniform stimulus hit every line, branch and reachable toggle of the butterfly and missed the bug; functional crosses and mutation testing measure the checks.</li>
+        <li><strong>Estimators rank; they do not sign off.</strong> CACTI, McPAT, Accelergy and Timeloop come with validation error bars from their papers, and one assumption (here the transistor type) can move a result a thousand-fold.</li>
+        <li><strong>If a tool cannot run, say so.</strong> RAPL and the GPU tools could not run here, and this deck shows what was tried and what the documentation says, not invented readings.</li>
+        <li><strong>A simulator's own checks are measurements too:</strong> replications with intervals, agreement between implementations, and bounds that no result may beat.</li>
+    </ul>
+    <div class="callout">
+        <div class="callout-label">Re-running this deck's measurements</div>
+        <p>On an idle machine, one at a time: <code>run_t12.py</code> (with valgrind and perf), <code>framework_profilers.py</code> (in Torch_Sim_Frontend's environment), <code>rtl_coverage.py</code> (in RTL_CoSim_NTT's, with Verilator) and <code>cacti/run_cacti.py</code>; then <code>check_snippets.py --only=t12</code> regenerates RESULTS.md and the deck build inlines every number from it.</p>
+    </div>
+</section>
+
+<!-- ════════════════════════════════════ Footer ════════════════════════════════════ -->
+<footer class="footer">
+    <p>Part of the <a href="https://github.com/BrendanJamesLynskey/SimEng_Hub_Toolkit">Simulation Engineering Toolkit series</a> &middot; <a href="https://brendanjameslynskey.github.io/SimEng_Hub_Toolkit/#glossary">glossary: every concept and where it is explained</a> &middot; code: <a href="https://github.com/BrendanJamesLynskey/Disaggregated_Inference_Sim">Disaggregated_Inference_Sim</a> &middot; <a href="https://github.com/BrendanJamesLynskey/Torch_Sim_Frontend">Torch_Sim_Frontend</a> &middot; <a href="https://github.com/BrendanJamesLynskey/RTL_CoSim_NTT">RTL_CoSim_NTT</a> &middot; <a href="https://github.com/BrendanJamesLynskey/Memory_System_Sim">Memory_System_Sim</a></p>
+    <p style="margin-top: 0.5rem; font-size: 0.8rem;"><a href="https://brendanjameslynskey.github.io/SimEng_11_Performance_Analysis/">&larr; 11 Performance Analysis of Simulators and Systems</a></p>
+    <p style="margin-top: 0.5rem; font-size: 0.8rem;">Interview questions: <a href="https://github.com/BrendanJamesLynskey/Interview_Computer_Architecture">Interview_Computer_Architecture</a> &middot; <a href="https://github.com/BrendanJamesLynskey/Interview_Observability_SRE">Interview_Observability_SRE</a> &middot; <a href="https://github.com/BrendanJamesLynskey/Interview_Software_Testing">Interview_Software_Testing</a> &middot; sister series: <a href="https://github.com/BrendanJamesLynskey/LLM_Hub_Inference_Simulators">LLM Inference Simulators</a> &middot; <a href="https://github.com/BrendanJamesLynskey/FHE_Hub_Accelerator_Simulators">FHE Accelerator Simulators</a></p>
+</footer>
+
+<script>
+    // Smooth scroll for TOC links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+
+    // Subtle fade-in on scroll
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.slide').forEach(slide => {
+        slide.style.opacity = '0';
+        slide.style.transform = 'translateY(30px)';
+        slide.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(slide);
+    });
+</script>
+
+</body>
+</html>
